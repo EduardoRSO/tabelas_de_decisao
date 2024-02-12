@@ -1,6 +1,6 @@
 # Tabelas de decisão
 
-Um pré-processador de tabelas de decisão para Python, segundo a dissertação apresentada ao instituto de matemática e estatítica da universidade de São Paulo por Satoshi Nagayama, com o Prof. Dr. Valdemar W. Setzer como orientador.
+Um pré-processador de tabelas de decisão, segundo a dissertação apresentada ao instituto de matemática e estatítica da universidade de São Paulo por Satoshi Nagayama, com o Prof. Dr. Valdemar W. Setzer como orientador. <br> 
 O tema da dissertação do Satoshi Nagayama é "Tabelas de Decisão e Implementação do Gerador I-M-E" e o pré-processador criado por ele gera código em Pascal. Meu objetivo é construir o mesmo pré-processador, mas para a linguaguem de programação Python.
 
 ## Table of Contents
