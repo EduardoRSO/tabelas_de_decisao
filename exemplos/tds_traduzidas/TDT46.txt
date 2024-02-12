@@ -1,0 +1,18 @@
+    %generate Pascal
+    %decision table Esquerda_para_direita
+    %sets
+        YN                      |   'Y';'N'
+        IR                      |   '-';'$';'*   
+    %conditions                    
+        Linha_Irrelevante(i)    |   Y   N   N   N   N   N   
+        C[k,l]                  |   -   IR  IR  IR  YN  YN
+        C[i,l]                  |   -   YN  IR  IR  YN  YN
+        L<Min                   |   -   -   Y   N   Y   N
+        L=Min                   |   -   -   *   Y   *   Y
+        J>Max                   |   -   -   -   Y   -   Y
+    %actions
+        Remove_Linha(i)         |   1
+        k:=i                    |       1   1   1   1   
+        Max:=J                  |       2   2   2   2   1
+        Min:=L                  |       3   3       3   2
+    %end table
