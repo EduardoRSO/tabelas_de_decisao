@@ -26,110 +26,196 @@
 <table>
     <tbody>
         <tr>
+            <td>Taxa de administração</td>
+            <td>[0,1]</td>
+        </tr>
+        <tr>
+            <td>Taxa de rebate</td>
+            <td>[0,1]</td>
+        </tr>
+        <tr>
+            <td>Redutor(es) da taxa de administração</td>
+            <td>[0,1]</td>
+        </tr>
+        <tr>
+            <td>Taxa de performance</td>
+            <td>[0,1]</td>
+        </tr>
+        <tr>
+            <td>Taxa de rebate de performance</td>
+            <td>[0,1]</td>
+        </tr>
+        <tr>
+            <td>Captação</td>
+            <td>[&minus;&infin;,&plus;&infin;]
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<p>Para calcular a taxa de administração de um fundo temos as seguintes condições e ações:</p>
+
+<table>
+    <tbody>
+        <tr>
             <td>Tem taxa de administração</td>
-            <td>Y</td>
             <td>N</td>
             <td>Y</td>
             <td>N</td>
             <td>Y</td>
+            <td>N</td>
+            <td>Y</td>
+            <td>N</td>
             <td>Y</td>
         </tr>
         <tr>
             <td>Tem taxa de rebate</td>
-            <td>Y</td>
-            <td>*</td>
-            <td>N</td>
-            <td>*</td>
-            <td>N</td>
-            <td>N</td>
-        </tr>
-        <tr>
-            <td>Tem taxa de performance</td>
-            <td>Y</td>
             <td>N</td>
             <td>N</td>
             <td>Y</td>
             <td>Y</td>
-            <td>Y</td>
-        </tr>
-        <tr>
-            <td>Tem taxa de rebate de performance</td>
-            <td>Y</td>
-            <td>*</td>
-            <td>*</td>
-            <td>Y</td>
-            <td>N</td>
-            <td>N</td>
-        </tr>
-        <tr>
-            <td>Tem redutores da taxa de administração</td>
-            <td>Y</td>
-            <td>*</td>
-            <td>N</td>
-            <td>*</td>
-            <td>N</td>
-            <td>N</td>
-        </tr>
-        <tr>
-            <td>Tem captação</td>
-            <td>Y</td>
-            <td>-</td>
             <td>N</td>
             <td>N</td>
             <td>Y</td>
             <td>Y</td>
         </tr>
         <tr>
-            <td>Subtrai redutores da taxa de administração</td>
+            <td>Tem redutor(es) da taxa de administração</td>
+            <td>N</td>
+            <td>N</td>
+            <td>N</td>
+            <td>N</td>
+            <td>Y</td>
+            <td>Y</td>
+            <td>Y</td>
+            <td>Y</td>
+        </tr>
+        <tr>
+            <td>Subtrai redutor(es) da taxa de administração</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>1</td>
+            <td></td>
+            <td>1</td>
+        </tr>
+        <tr>
+            <td>Subtrai rebate da taxa de administração</td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td>1</td>
             <td></td>
             <td></td>
             <td></td>
+            <td>1</td>
+        </tr>
+        <tr>
+            <td colspan="9">
+                <p>*O rebate é uma porcentagem que é devolvida para a instituição que o fundo. Geralmente o consumidor não sabe essa informação.</p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<p>Como haviam 3 condições, foram necessárias 2³ colunas para expressar todas as combinações. No entanto, podemos simplificar para:</p>
+
+<table>
+    <tbody>
+        <tr>
+            <td>Tem taxa de administração</td>
+            <td>Y</td>
+            <td>Y</td>
+            <td>Y</td>
+            <td>N</td>
+        </tr>
+        <tr>
+            <td>Tem taxa de rebate</td>
+            <td>Y</td>
+            <td>N</td>
+            <td>Y</td>
+            <td>*</td>
+        </tr>
+        <tr>
+            <td>Tem redutor(es) da taxa de administração</td>
+            <td>Y</td>
+            <td>Y</td>
+            <td>N</td>
+            <td>*</td>
+        </tr>
+        <tr>
+            <td>Subtrai redutor(es) da taxa de administração</td>
+            <td>1</td>
+            <td>1</td>
             <td></td>
             <td></td>
         </tr>
         <tr>
             <td>Subtrai rebate da taxa de administração</td>
-            <td>2</td>
+            <td>1</td>
+            <td></td>
+            <td>1</td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+<p>Agora enumeramos as condições e ações para o cálculo da taxa de performance:</p>
+<table>
+    <tbody>
+        <tr>
+            <td>Tem taxa de performance</td>
+            <td>Y</td>
+            <td>Y</td>
+            <td>N</td>
+        </tr>
+        <tr>
+            <td>Tem taxa de rebate de performance</td>
+            <td>Y</td>
+            <td>N</td>
+            <td>*</td>
+        </tr>
+        <tr>
+            <td>Subtrai rebate da taxa de performance</td>
+            <td>1</td>
             <td></td>
             <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <p>
+                    *A taxa de performance é aplicada quando o ativo ultrapassa o rendimento do <u>benchmark</u> proposto. Por exemplo: CDI, IPCA, IGP-M, IBOV, entre outros.
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p>Após obtermos a taxa de administração e performance finais, basta considerar se houve captação:</p>
+<table>
+    <tbody>
+        <tr>
+            <td>Tem captação</td>
+            <td>Y</td>
+            <td>N</td>
         </tr>
         <tr>
             <td>Adiciona valor captado ao AUM do fundo</td>
-            <td>P</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
             <td>1</td>
-        </tr>
-        <tr>
-            <td>Subtrai rebate de performance da taxa de performance</td>
-            <td>3</td>
-            <td></td>
-            <td></td>
-            <td>1</td>
-            <td></td>
             <td></td>
         </tr>
         <tr>
             <td>Calcula receita bruta</td>
-            <td>4</td>
-            <td></td>
-            <td>1</td>
             <td>2</td>
             <td>1</td>
-            <td>2</td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <p>*AUM(Assets Under Management) são os ativos sob gestão. Ele representa o volume total de recursos que uma instituição financeira ou gestora possui ou administra.</p>
+            </td>
         </tr>
     </tbody>
 </table>
+<br>
 </body>
-De que forma eu definiria os valores da taxas, redutores e captações?<br>
-Eu realmente preciso definir 2^(6) colunas?<br>
-Algumas das ações que eu defini não necessáriamente precisam seguir a ordem indicada, como isto poderia ser indicado?<br>
-AUM = Assets Under Management ou os ativos sob gestão. Ele representa o volume total de recursos que uma instituição financeira ou gestora possui ou administra.<br>
-O "rebate" é uma porcentagem que é devolvida para a instituição que indicou meu fundo. Geralmente o consumidor não sabe essa informação.
 </html>
