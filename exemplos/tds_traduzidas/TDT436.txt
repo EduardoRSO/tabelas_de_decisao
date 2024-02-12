@@ -1,0 +1,21 @@
+%decision table leitura
+    %sets
+        P = ',';'.'
+        U = '0'..'9'
+        CP = ~(',';'.')
+    %conditions
+    %-- Número da Regra         |   1   2   3   4   5   6   7   8   
+        Tipo = Inteiro          |   Y   Y   *   *   *   *   *   *
+        Tipo = Real             |   *   *   Y   Y   Y   Y   Y   Y
+        Entrada                 |   '-' U   '-' P   P   U   U   U
+        Atual = 1               |   Y   -   Y   -   -   -   -   -
+        Houve_Ponto             |   *   *   *   N   Y   N   Y   Y
+        S[Atual]                |   -   -   -   -   -   -   P   CP
+    %actions                    
+        %exec Vírgula_Ponto     |               1
+        %exec Le_Char           |   1   1   1   2       1   1   1 
+        %exec Avança            |   2   2   2   3       2   2   2
+        %exec Inverte_Pto       |               4           3
+        %exec Erro_Ponto        |                   1
+        %exec Erro              |                                   1
+%end table
