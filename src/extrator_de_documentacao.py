@@ -126,18 +126,44 @@ def formata_documentacao(lista_de_documentacoes:list):
 #3 SE NÃO HÁ SEPARADOR, NAO USO O STRIP() PARA NÃO REMOVER A IDENTAÇÃO
 #3]
 
+#1[
+#1 ROTINA: ESTRUTURA_DOCUMENTACAO
+#1 FINALIDADE: RETORNA UM DICIONARIO COM OS METADADOS E AS ROTINAS, PODENDO ACESSAR CADA UM DOS NÍVEIS
+#1 ENTRADAS: LISTA COM TODAS AS DOCUMENTACOES FORMATADAS
+#1 DEPENDENCIAS: NENHUMA
+#1 CHAMADO POR: 
+#1 CHAMA: 
+#1]
+
+#2[
+#2 PSEUDOCODIGO DE: ESTRUTURA_DOCUMENTACAO
 def estrutura_documentacao(documentacao_formatada:list):
     estruturada = TEMPLATE_ESTRUTURADA_1.copy()
+    #2 INICIALIZA O DICIONARIO COM A ESTRUTURA DE METADADOS E ROTINAS
     for doc_dict in documentacao_formatada:
+        #2 PARA CADA DICIONARIO NA LISTA DE DICIONARIOS FORMATADA
         chaves = list(doc_dict.keys())
-        print(chaves)
         if chaves[0] in IDENTIFICADORES:
+            #2 SE FOR IDENTIFICADOR
             if estruturada[ROTINAS].get(doc_dict[chaves[0]]) == None:
                 estruturada[ROTINAS][doc_dict[chaves[0]]] = TEMPLATE_ESTRUTURADA_2.copy()
+                #2 INICIALIZA A ESTRUTURA DOS NIVEIS, CASO NAO TENHA SIDO INICIALIZADA AINDA
             estruturada[ROTINAS][doc_dict[chaves[0]]][PEGA_NIVEL[''.join(chaves)]] = doc_dict
+            #2 DEFINE O NÍVEL COM BASE NOS NOMES DOS CAMPOS
+            #2 INSERE NO RESPECTIVO NÍVEL
         else:
+            #2 SE NÃO FOR IDENTIFICADOR, INSERE COMO METADADO
             estruturada[METADADOS] = doc_dict        
     return estruturada
+    #2 RETORNA O DICIONARIO
+#2]
+
+#3[
+#3 DETALHES DE: ESTRUTURA_DOCUMENTACAO
+#3 CASO ALGUM RÓTULO ESTEJA ESCRITO ERRADO, O EXTRATOR VAI DAR ERRO
+#3 PARA PEGAR O NIVEL, EU TRANSFORMO A LISTA DE ROTULOS EM UMA ÚNICA STRING USANDO ''.JOIN(ROTULOS)
+#3 APÓS CRIAR A STRING, FAÇO UMA BUSCA PELO PAR <CHAVE,VALOR> NO DICIONARIO PEGA_NIVEL DEFINIDO EM CONSTANTES.PY
+#3]
 '''
 inicializa um dicionario de documentacoes estruturadas(LDE)
 se for uma pasta, entao
