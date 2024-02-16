@@ -20,6 +20,8 @@ SINTAXE = ['#1', '#2', '#3']
 
 IDENTIFICADORES = ['ROTINA','PSEUDOCODIGO DE','DETALHES DE']
 
+PONTEIROS = ['DEPENDENCIAS', 'CHAMADO POR', 'CHAMA', 'ROTINAS CHAMADAS']
+
 METADADOS = 'METADADOS'
 
 ROTINAS = 'ROTINAS'
@@ -53,3 +55,22 @@ estrutura do arquivo json
         }
     }
 '''
+
+PATH_DOCUMENTACAO = '/home/erso/Documents/tcc/tabelas_de_decisao/exemplos/documentacoes_extraidas/documentacoes.json'
+
+#1[
+#1 ROTINA: 
+#1 FINALIDADE: 
+#1 ENTRADAS:
+#1 DEPENDENCIAS: 
+#1 CHAMADO POR: 
+#1 CHAMA: 
+#1]
+
+#2[
+#2 PSEUDOCODIGO DE: 
+#2]
+
+#3[
+#3 DETALHES DE: 
+#3]
