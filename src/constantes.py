@@ -2,6 +2,11 @@ FRASE_INPUT_PATH = "INSIRA O PATH DO DIRETÓRIO: "
 
 REGEX_NIVEIS_DE_DOCUMENTACAO = r'#[0-9]\[((.|\n)*?)#[0-9]\]'
 
+REGEX_TD_TRADUZIDA  = r'%decision table((.|\n)*?)%end table'
+
+PALAVRAS_RESERVADAS = ['%generate','%decision table','%preparation','%sets','%conditions','%actions','%end table']
+IGNORADAS = ['%exec','%Numero da Regra',]
+
 SEPARADOR = ':'
 
 COMENTARIO = 'DESCRICAO'
