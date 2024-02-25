@@ -4,9 +4,9 @@ c
 d
 %decision table leitura
     %sets
-        P                       | ,:.
+        P                       | ,:.:
         U                       | 0..9:
-        CP                      | ~,:~.
+        CP                      | ~,:~.:
     %conditions
         %Numero da Regra        |   1:   2:   3:   4:   5:   6:   7:   8:
         Tipo = Inteiro          |   Y:   Y:   *:   *:   *:   *:   *:   *:
