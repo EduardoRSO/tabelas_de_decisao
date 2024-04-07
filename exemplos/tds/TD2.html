@@ -21,63 +21,102 @@
 </head>
 <body>
 
-<h2>Tabela de decisão para simulação da receita bruta gerada por um fundo de uma gestora de recursos em 1 mês.</h2>
+<h2>Tabela de decisão para cálculo do desempenho dos pares de mercado</h2>
 
 <table>
     <tbody>
         <tr>
-            <td>AUM</td>
-            <td>[0,&plus;&infin;]</td>
+            <td>DIA</td>
+            <td>[&minus;&infin;,&plus;&infin;]</td>
         </tr>
         <tr>
-            <td>Taxa de administração</td>
-            <td>[0,1]</td>
+            <td>MTD</td>
+            <td>[&minus;&infin;,&plus;&infin;]</td>
         </tr>
         <tr>
-            <td>Taxa de rebate</td>
-            <td>[0,1]</td>
+            <td>YTD</td>
+            <td>[&minus;&infin;,&plus;&infin;]</td>
         </tr>
         <tr>
-            <td>Redutor(es) da taxa de administração</td>
-            <td>[0,1]</td>
+            <td>VOL 90D</td>
+            <td>[&minus;&infin;,&plus;&infin;]</td>
         </tr>
         <tr>
-            <td>Taxa de performance</td>
-            <td>[0,1]</td>
+            <td>VOL 260D</td>
+            <td>[&minus;&infin;,&plus;&infin;]</td>
         </tr>
         <tr>
-            <td>Taxa de rebate de performance</td>
-            <td>[0,1]</td>
-        </tr>
-        <tr>
-            <td>Captação</td>
+            <td>1YR RETURN</td>
             <td>[&minus;&infin;,&plus;&infin;]
             </td>
         </tr>
         <tr>
-            <td>Benchmark</td>
-            <td>[0,1]</td>
+            <td>SHARPE 1Y</td>
+            <td>[&minus;&infin;,&plus;&infin;]
+            </td>
         </tr>
         <tr>
-            <td>Rendimento esperado</td>
-            <td>[0,1]</td>
-        </tr>
-        <tr>
-            <td>Dias úteis</td>
-            <td>[0,22] &in; &integers;&plus;</td>
-        </tr>
-        <tr>
-            <td>Impostos</td>
-            <td>[0,1]</td>
+            <td>NAV MASTER</td>
+            <td>[&minus;&infin;,&plus;&infin;]
+            </td>
         </tr>
         <tr>
             <td colspan="2">
-                <p>*Aqui posso fazer alguns comentários sobre os novos valores inseridos.</p>
-                <p>*Também preciso conferir se não estou esquecendo algo.</p>
-                <p>*Não lembro todas as etapas, então vou continuar depois.</p>
+                <p>Todas as variáveis acima são métricas de investimento.</p>
+                <p>MTD(Month to date) e YTD(Year to date) representam a rentabilidade do ativo durante o período indicado. O DIA possui o mesmo significado, mas no período de 1 único dia. No entanto, por ser um valor muito pequeno a unidade medida utilizada é bps(1/1000). Essas métricas são importantes, porque fornecem uma visão do desempenho recente ou acumulado ao longo do tempo.</p>
+                <p>A VOL 90D e VOL 260D representam a volatilidade de um ativo no período indicado, indicado a magnitude das flutuações dos retornos ao longo desses períodos.</p>
+                <p>O 1YR RETURN é o retorno acumulado de um investimento ao longo de um ano e pode causar confusão com YTD. Porém a diferença é que o YTD tem como base o inicio do ano corrente e o 1YR RETURN tem como base 252 dias úteis atrás.</p>
+                <p>O SHARPE 1Y é uma medida de retorno ajustada ao risco, ajudando os investidores a avaliar se o retorno adicional de um investimento compensa o risco adicional assumido em relação a um investimento livre de risco.</p>
+                <p>O NAV MASTER representa o valor patrimonial do fundo master de uma gestora. O fundo master costuma estar no topo da hierarquia de fundos FIC, FIM, FIA, FIDC e FIP.</p>
+            </td>
+    </tbody>
+</table>
+
+<p>Construção da tabela</p>
+<table>
+    <tbody>
+        <tr>
+            <td>Site fora do ar?</td>
+            <td>Y</td>
+            <td>N</td>
+        </tr>
+        <tr>
+            <td>Dados D-1 disponíveis?</td>
+            <td>Y</td>
+            <td>*</td>
+        </tr>
+        <tr>
+            <td>Extrai dados do fundo no site</td>
+            <td>1</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Puxa dados da BBG</td>
+            <td>2</td>
+            <td>1</td>
+        </tr>
+        <tr>
+            <td>Agrega dados em uma tabela</td>
+            <td>3</td>
+            <td>2</td>
+        </tr>
+        <tr>
+            <td>Atualiza banco de dados</td>
+            <td>4</td>
+            <td>3</td>
+        </tr>
+        <tr>
+            <td>Atualiza Power BI</td>
+            <td>5</td>
+            <td>4</td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <p>A BBG(Bloomberg) é uma empresa que divulga dados econômicos, dados de mercado e nergócios para análises do mundo inteiro.</p>
             </td>
         </tr>
     </tbody>
 </table>
+<br>
 </body>
 </html>
