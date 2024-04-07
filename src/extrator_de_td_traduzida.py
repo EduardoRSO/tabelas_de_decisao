@@ -156,11 +156,15 @@ def estrutura_td_traduzida(tds_formatadas:dict):
                     tmp[index] = {
                         "ROTULO": item[0]
                     }
-
-                    #2 VARRE OS SUB VALORES, OBTENDO O SUB INDEX DE CADA UM
-                    for subindex, subitem in enumerate(item[1].split(SEPARADOR)[:-1]):
-                        #2 INSERE O VALOR DE CADA SUBITEM, PRESERVANDO O SUBINDEX E O VALOR DO SUBITEM 
-                        tmp[index][subindex] = subitem
+                    #2 VERIFICA SE APÓS SEPARAR POR DESCRICAO_TD O TAMANHO É MAIOR QUE UM
+                    if len(item) > 1:
+                        #2 VARRE OS SUB VALORES, OBTENDO O SUB INDEX DE CADA UM
+                        for subindex, subitem in enumerate(item[1].split(SEPARADOR)[:-1]):
+                            #2 INSERE O VALOR DE CADA SUBITEM, PRESERVANDO O SUBINDEX E O VALOR DO SUBITEM 
+                            tmp[index][subindex] = subitem
+                    #2 CASO NÃO SEJA, INSERE NA PRIMEIRA POSIÇÃO O MESMO VALOR DO RÓTULO
+                    else:
+                        tmp[index][0] = item[0]
                 return tmp    
         #2 SE NÃO FOR UMA LISTA
         else:
