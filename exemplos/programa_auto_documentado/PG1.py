@@ -1,4 +1,3 @@
-#copiei do relatorio técnico, com a pequena mudança de usar [] para indicar o inicio e fim ao invés de 1========= ou (*1=====*)
 #1[
 #1 TITULO: COMENTÁRIO
 #1 AUTOR: AFONSO CELSO ROCHA MASTRELLI
@@ -9,14 +8,6 @@
 #1 SAIDAS: RELATÓRIO COM A DOCUMENTAÇÃO EXTRAÍDA DO ARQUIVO FONTE;
 #1 ROTINAS CHAMADAS: LIB$DO_COMMAND (EXTERNA), MOSTRA_TELA, CABEÇALHO, RELA_RELATPAS E SYS$ASCTIM (EXTERNA);
 #1]
-
-#1)esse comentário deve ser ignorado
-
-#2)!@#!@#!@#!@#
-
-#3)todos os simbolos especiais devem ser lidos sem problema
-
-#4)minha ideia é que apenas a estrutura de NOME: COMENTARIO deve ser seguida, porque vou dar split(':')
 
 #1[
 #1 ROTINA: MOSTRA_TELA
@@ -39,18 +30,9 @@
 #2              ASSUME-SE PASCAL COMO LINGUAGEM UTILIZADA   
 #2]
 
-#5)no relatório o nível 3 é dito como aquele que engloba os niveis 1 e 2, assim como está no programa, mas eu acho que seria melhor fazer esse nível para comentar alguns detalhes ou truques, assim como sugerido pelo setzer
-
 #3[
 #3 DETALHES DE: MOSTRA_TELA
 #3 LIMPA TELA FOI PRODUZIDA USANDO WRITE(CLS), PORQUE, DADO QUE CLS ESTÁ VAZIO, O BUFFER É ALTERADO PARA UMA STRING VAZIA
 #3 AS OPÇÕES DO MENU ESTÃO NO ARQUIVO constants.py, EM FORMATO DE LISTA
 #3 CASO SEJA FORNECIDO A ENTRADA DEVMODE SERÃO CRIADOS ARQUIVOS .JSON COM O PRODUTO CARTESIANO DOS NÍVEIS DISPONÍVEIS  
 #3]
-
-
-#6)eu acho que o controle de versionamento não é interessante, porque como vou utilizar o git, ele já possui uma ferramenta para tal
-#7)mas fazer os comentários no código usando um determinado padrão e criar um programa que extrai esses comentários à minha escolha definitivamente é interessante
-#8)a minha ideia é que o produto final seja um arquivo json, porque é muito fácil fazer a leitura, escrita e converter em uma estrutura de dados.
-#9)fora que usando o arcabouço pandas do python, posso transofrmar em um dataframe e converter para uma infinidade de formatos, o pandas permite até o uso de uma sintaxe semelhante ao SQL, usando WHERE, SELECT, JOIN, etc.
-#10)o extrator vai ser capaz de resgatar comentarios de linha única(nivel 2) e blocos de comentário(nivel 1 e 3).... talvez eu use apenas comentarios de linha para facilitar minha vida
