@@ -93,11 +93,11 @@ def extrai_nivel_1(arquivo:str):
 
 #2[
 #2 PSEUDOCODIGO DE: CONSTROI_PDF
-def constroi_pdf(documentacao:list, path_saida:str, margem:int = 10, fonte:int = 5, titulo:str = 'DOCUMENTAÇÃO'):
+def constroi_pdf(documentacao:list, path_saida:str, margem:int = 10, tamanho_fonte:int = 5, titulo:str = 'DOCUMENTAÇÃO'):
 #2  DEFINE UM CANVAS COM PATH DE SAIDA E TAMANHO DA PÁGINA
     c = canvas.Canvas(os.path.join(path_saida,'documentacao.pdf'), pagesize=letter)
 #2  DEFINE O TAMANHO E ESTILO DA FONTE
-    c.setFont("Helvetica", fonte)
+    c.setFont("Helvetica", tamanho_fonte)
 #2  EXTRAI A LARGURA E ALTURA DA PÁGINA
     largura, altura = letter
 #2  INSERE UM TITULO
@@ -117,10 +117,18 @@ def constroi_pdf(documentacao:list, path_saida:str, margem:int = 10, fonte:int =
 #2      SE NÃO FOR FIM DE NIVEL DE DOCUMENTACAO
 #2          PULA PARA A PROXIMA LINHA
 #2      CASO CONTRÁRIO, PULA 2 LINHAS
-        espaco_vertical_restante -= fonte+1 if ']' not in linha else 3*fonte+1
+        espaco_vertical_restante -= tamanho_fonte+1 if ']' not in linha else 3*tamanho_fonte+1
 #2  SALVA O CANVAS
     c.save()
 #2]
+
+#3[
+#3 DETALHES DE: CONSTROI_PDF
+#3 É POSSÍVEL PARAMETRIZAR O ESTILO DA FONTE EM SETFONT
+#3 É POSSÍVEL PARAMETRIZAR O ESPAÇO ENTRE LINHAS MUDANDO O DECRÉSCIMO DE ESPAÇO_VERTICAL_RESTANTE
+#3 É POSSÍVEL PARAMETRIZAR O ALINHAMENTO DO TÍTULO ALTERANDO O PRIMEIRO DRAWSTRING
+#3 NO MOMENTO NÃO ADICIONEI ESSAS FUNÇÕES, PORQUE NÃO FORAM NECESSÁRIAS, MAS BASTA PASSAR COMO PARAMETROS DA FUNÇÃO
+#3]
 
 modo_de_execucao = {
     '1': extrai_nivel_1,
