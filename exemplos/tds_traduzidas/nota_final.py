@@ -22,23 +22,23 @@ if __name__ == '__main__':
 
 #TD decision table 
 #TD conditions
-#TD        media_provas > 5         Y N Y N Y N N -
-#TD        media_listas > 5         Y Y Y N N Y N -
-#TD        media_eps    > 5         Y Y N Y N N N -
-#TD        frequencia   > 70        Y Y Y Y Y Y Y N
+#TD        media_provas>5         Y N Y N Y N N -
+#TD        media_listas>5         Y Y Y N N Y N -
+#TD        media_eps>5         Y Y N Y N N N -
+#TD        frequencia>70        Y Y Y Y Y Y Y N
 #TD actions
 #TD        calcula_nota_final       1 1 1 1 1 1 1 0
-#TD        nota_final = 0           0 0 0 0 0 0 0 1
+#TD        nota_final=0           0 0 0 0 0 0 0 1
 #TD end table
 
 #TD decision table 
 #TD conditions
-#TD        nota_final < 3           N N -
-#TD        nota_final >= 3          - Y -
-#TD        nota_final >= 5          - N Y
+#TD        nota_final<3           N N -
+#TD        nota_final>=3          - Y -
+#TD        nota_final>=5          - N Y
 #TD actions
-#TD        resultado = reprovado    1 0 0
-#TD        resultado = recuperação  0 1 0
-#TD        resultado = aprovado     0 0 1
+#TD        resultado=reprovado    1 0 0
+#TD        resultado=recuperação  0 1 0
+#TD        resultado=aprovado     0 0 1
 #TD end table
     pass 
