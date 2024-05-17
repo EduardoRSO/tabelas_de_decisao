@@ -42,17 +42,14 @@ def trata_condicao(td:dict, condicao:str,entrada:str):
     else:
         return f'{condicao} == {entrada}'
 
-def trata_acao(td:dict, M:int):
-    #Como determinar qual é a sequencia de ações?
-    #Há uma ordenação, mas ainda não enxerguei como isso implica que sempre
-    #é verdade que se I == i, então Ações -> Acões da regra R_i
-    return f'A_{M}'
+def trata_acao(td:dict, M:int, espaco:str):
+    sequencia_de_acoes = sorted([(int(action[M+1]), action[0]) for action in td['actions'] if action[M+1] != '0'], key = lambda x: x[0])
+    return  f'\n'.join([f'{espaco}{indice_e_acao[1]}' for indice_e_acao in sequencia_de_acoes])
 
 def gera_codigo(td:dict):
-    print(td)
     codigo_gerado = "\n".join([f'I_{index} = 0 #Inicialização do auxiliar da condição {condicao}' for index, condicao in enumerate(td['conditions'])])+'\nI   = 0 #Inicialização do número da regra\n'
     for index, linha_de_condicao in enumerate(td['conditions']):
-        C = set(['-'])
+        C = set()
         n_i = 0
         condicao = linha_de_condicao[0]
         entradas = linha_de_condicao[1:]
@@ -60,21 +57,20 @@ def gera_codigo(td:dict):
             if C_ij not in C:
                 n_i +=1
                 c_ij = C_ij
-                if len(C) == 1:
+                if len(C) == 0:
                     codigo_gerado += f'if {trata_condicao(td, condicao, c_ij)}:\n    I_{index} = 0\n'
                 else:
                     codigo_gerado += f'elif {trata_condicao(td, condicao, c_ij)}:\n    I_{index} = {n_i-1}\n'
-                C.add(c_ij)
+                C.add(c_ij) if c_ij != '-' else C.add(['Y','N'])
     
     entradas_por_condicao = [len(set(condicao))-1 for condicao in td['conditions']] 
     codigo_gerado += f"I = {'+'.join(['*'.join(['1']+[f'{entradas_por_condicao[j]}' for j in range(i+1,len(td['conditions']))])+f'*I_{i}' for i in range(len(td['conditions']))])}\n"
     codigo_gerado += f'match I:\n'
     for M in range(reduce(operator.mul, entradas_por_condicao, 1)):
-        codigo_gerado += f'    case {M}:\n        {trata_acao(td,M)}\n'
+        codigo_gerado += f'    case {M}:\n{trata_acao(td,M,"        ")}\n'
     codigo_gerado += f'    case _:\n        exit()\n'    
     return codigo_gerado
 
-    
 if __name__ == '__main__':
     if len(sys.argv) != 3:
         print('Uso: python switch_method.py <PATH ARQUIVO> <PATH OUTPUT>')
