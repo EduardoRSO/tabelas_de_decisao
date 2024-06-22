@@ -142,3 +142,7 @@ if __name__ == '__main__':
     else:
         documentacao = modo_de_execucao[sys.argv[2]](open(sys.argv[1],'r').read())
         constroi_pdf(documentacao,sys.argv[3])
+
+
+
+#no nivel 3, mostrar o codigo todo
