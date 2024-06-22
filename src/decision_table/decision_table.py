@@ -1,6 +1,6 @@
-from set import SetParser
-from condition import ConditionParser
-from action import ActionParser
+from decision_table.set import SetParser
+from decision_table.condition import ConditionParser
+from decision_table.action import ActionParser
 
 class DecisionTable:
     
@@ -20,7 +20,7 @@ class DecisionTable:
         '''
         Representação em string do objeto Decision Table
         '''
-        return ''
+        return f' [+] DecisionTable:\n     extracted_decision_table: {self.get_extracted_decision_table()}\n     name: {self.get_name()}\n     sets: {self.get_sets()}\n     conditions: {self.get_conditions()}\n     actions: {self.get_actions()}'
         
     def set_extracted_decision_table(self, extracted_decision_table:str) ->None:
         '''
@@ -50,7 +50,7 @@ class DecisionTable:
         '''
         Setter do atributo actions
         '''
-        self.actions = self.actions.parse(self.get_extracted_decision_table())
+        self.actions = self._action_parser.parse(self.get_extracted_decision_table())
 
     def get_extracted_decision_table(self) ->str:
         '''
@@ -112,8 +112,8 @@ class DecisionTable:
         '''
         Verifica se um nome é valido através da presença de uma string não vazia
         '''
-        decision_table_lines = self.get_extracted_decision_table().split('\n')[0].split()
-        first_line_splitted_by_empty_spaces = decision_table_lines.split(' ') 
+        decision_table_lines = self.get_extracted_decision_table().split('\n')[0].strip()
+        first_line_splitted_by_empty_spaces = decision_table_lines.split(' ')[3:] 
         if first_line_splitted_by_empty_spaces == []:
-            raise ValueError(f' [-] Tabela de decisão não possui nome {first_line_splitted_by_empty_spaces}')
-        return ' '.join(first_line_splitted_by_empty_spaces[3:]) 
+            raise ValueError(f' [-] Tabela de decisão não possui nome {first_line_splitted_by_empty_spaces}: {decision_table_lines}')
+        return ' '.join(first_line_splitted_by_empty_spaces)          
