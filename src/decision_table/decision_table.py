@@ -116,4 +116,14 @@ class DecisionTable:
         first_line_splitted_by_empty_spaces = decision_table_lines.split(' ')[3:] 
         if first_line_splitted_by_empty_spaces == []:
             raise ValueError(f' [-] Tabela de decisão não possui nome {first_line_splitted_by_empty_spaces}: {decision_table_lines}')
-        return ' '.join(first_line_splitted_by_empty_spaces)          
+        return ' '.join(first_line_splitted_by_empty_spaces)        
+
+    def get_translated_set_by_name(self, set_name:str) ->str:
+        for td_set_name, td_set_value in self.get_sets():
+            if td_set_name == set_name:
+                return td_set_value
+        if set_name == 'Y':
+            return '== True'
+        if set_name == 'N':
+            return '== False'
+        raise ValueError(f' [-] Nome do conjunto inválido. Nomes válidos {self.get_sets()} Nome recebido: {set_name}') 
