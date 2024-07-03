@@ -74,19 +74,19 @@ class DecisionTable:
         '''
         Getter do atributo sets
         '''
-        return self.sets
+        return self.sets.copy()
 
     def get_conditions(self) ->list:
         '''
         Getter do atributo conditions
         '''
-        return self.conditions
+        return self.conditions.copy()
     
     def get_actions(self) ->list:
         '''
         Getter do atributo actions
         '''
-        return self.actions
+        return self.actions.copy()
     
     def get_decision_table(self) ->dict:
         '''
@@ -119,6 +119,9 @@ class DecisionTable:
         return ' '.join(first_line_splitted_by_empty_spaces)        
 
     def get_translated_set_by_name(self, set_name:str) ->str:
+        '''
+        Retorna o código correspondente de um conjunto
+        '''
         for td_set_name, td_set_value in self.get_sets():
             if td_set_name == set_name:
                 return td_set_value
@@ -127,3 +130,30 @@ class DecisionTable:
         if set_name == 'N':
             return '== False'
         raise ValueError(f' [-] Nome do conjunto inválido. Nomes válidos {self.get_sets()} Nome recebido: {set_name}') 
+    
+    def _set_sequence_of_actions(self) ->None:
+        '''
+        Cria um dicionário do tipo <índice, lista<tupla<ordem_da_acao,acao>>>
+        '''
+        self._sequence_of_actions = {}
+        for action_name, action_ordering in self.get_actions():
+            for index, action_order in enumerate(action_ordering):
+                self._sequence_of_actions[index] = self._sequence_of_actions.get(index,[])
+                if action_order != '0':
+                    self._sequence_of_actions[index].append((int(action_order),action_name))
+        for index in self._sequence_of_actions.keys():
+            if len(self._sequence_of_actions[index]) > 1:
+                self._sequence_of_actions[index].sort(key= lambda x: x[0]) 
+
+    def get_sequence_of_actions_by_id(self, action_id:int) ->list:
+        '''
+        Retorna o código correspondente de uma sequência de ações
+        '''
+        if not hasattr(self, '_sequence_of_actions'):
+            self._set_sequence_of_actions()
+        if len(self._sequence_of_actions[action_id]) == 0:
+            return []
+        else:
+            return [action_tuple[1] for action_tuple in self._sequence_of_actions[action_id]]
+        
+        
