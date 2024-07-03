@@ -151,7 +151,9 @@ class DecisionTable:
         '''
         if not hasattr(self, '_sequence_of_actions'):
             self._set_sequence_of_actions()
-        if len(self._sequence_of_actions[action_id]) == 0:
+        if self._sequence_of_actions.get(action_id) == None:
+            raise ValueError(f' [-] Índice da sequência de ações inválido. Dicionário de sequência de ações: {self._sequence_of_actions} Índice recebido: {action_id}')
+        elif len(self._sequence_of_actions[action_id]) == 0:
             return []
         else:
             return [action_tuple[1] for action_tuple in self._sequence_of_actions[action_id]]
