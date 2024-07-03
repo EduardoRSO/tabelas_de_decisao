@@ -118,19 +118,14 @@ class DecisionTable:
             raise ValueError(f' [-] Tabela de decisão não possui nome {first_line_splitted_by_empty_spaces}: {decision_table_lines}')
         return ' '.join(first_line_splitted_by_empty_spaces)        
 
-    def get_translated_set_by_name(self, set_name:str) ->str:
-        '''
-        Retorna o código correspondente de um conjunto
-        '''
+    def _set_translated_set_by_name(self) ->None:
+        self._translated_set_by_name = {
+            'Y': '== True',
+            'N': '== False'
+            }
         for td_set_name, td_set_value in self.get_sets():
-            if td_set_name == set_name:
-                return td_set_value
-        if set_name == 'Y':
-            return '== True'
-        if set_name == 'N':
-            return '== False'
-        raise ValueError(f' [-] Nome do conjunto inválido. Nomes válidos {self.get_sets()} Nome recebido: {set_name}') 
-    
+            self._translated_set_by_name[td_set_name] = td_set_value
+            
     def _set_sequence_of_actions(self) ->None:
         '''
         Cria um dicionário do tipo <índice, lista<tupla<ordem_da_acao,acao>>>
@@ -158,4 +153,13 @@ class DecisionTable:
         else:
             return [action_tuple[1] for action_tuple in self._sequence_of_actions[action_id]]
         
-        
+    def get_translated_set_by_name(self, set_name:str) ->str:
+        '''
+        Retorna o código correspondente de um conjunto
+        '''
+        if not hasattr(self, '_translated_set_by_name'):
+            self._set_translated_set_by_name()
+        if self._translated_set_by_name.get(set_name) == None:
+            raise ValueError(f' [-] Nome do conjunto inválido. Dicionário de traduções por nome do conjunto {self._translated_set_by_name} Nome recebido: {set_name}') 
+        else:
+            return self._translated_set_by_name[set_name]
