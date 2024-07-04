@@ -136,3 +136,16 @@ class CodeGenerator():
         Gera código a partir de uma tabelade decisão com o método definido na instanciação
         '''
         self.method(decision_table)
+
+#agora está finalizada a minha reestruturação do código para orientação a objetos
+#eu consegui obter o comportamento que eu desejava, que era a flexbilidade e facilidade para alteração e implementação de novas funções
+#agora resta continuar desenvolvendo o que havia sido proposto pelo Val na ultima reunião:
+
+# o código gerado deve carregar a TD documentada no início dele, convertendo a auto documentacao para o nível 2
+# implementar a possiblidade de invocar uma TD dentro de uma TD.
+#   Para isso, imagino que a solução mais fácil seria definir que toda TD é construída como uma função no código, porque a invocação seria uma mera chamada de função: td_<Nome>()
+#   Usar essa estratégia de funções permite até que a inserção seja mais simples: Posso optar por definir as funções no topo do código e inserir a chamada da função onde ela havia sido construída
+#   um outro exemplo comentado pelo Val era que, se fosse possivel invocar uma TD, tambem fosse posivel decidir se quero que volte para a 1a após a conclusão da 2a ou não.
+# construir exemplos de aplicação de TD: Trilhas BCC | ações como funções
+# implementar o codeInserter e assegurar que funciona
+
