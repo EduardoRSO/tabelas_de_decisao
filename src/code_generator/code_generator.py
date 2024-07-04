@@ -84,7 +84,6 @@ class CodeGenerator():
         '''
         self.generated_code += f'{self.initial_spacing}match I:\n'    
         for M in range(self.product_of_entries_by_condition(td)):
-            #print(td.get_sequence_of_actions_by_id(M))
             self.generated_code += f'{self.initial_spacing + self.default_spacing}case {M}:'
             for action in td.get_sequence_of_actions_by_id(M):
                 self.generated_code += f'\n{self.initial_spacing + 2*self.default_spacing}{action}'
