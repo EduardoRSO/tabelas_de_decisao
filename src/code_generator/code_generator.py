@@ -2,7 +2,7 @@ from decision_table.decision_table import DecisionTable
 
 class CodeGenerator():
 
-    def __init__(self):
+    def __init__(self, initial_spacing:str=' ', default_spacing:str='   '):
         
         self._decision_table_tradution_methods = {
             'switch_method' : self._switch_method,
@@ -10,6 +10,9 @@ class CodeGenerator():
             'busca_exaustiva' : self._busca_exaustiva,
             'programacao_dinamica' : self._programacao_dinamica
         }
+        self.initial_spacing = initial_spacing
+        self.default_spacing = default_spacing
+
         self.set_method('switch_method')
 
     def set_method(self, method_name:str) ->None:
@@ -53,20 +56,20 @@ class CodeGenerator():
         '''
         self.generated_code = ''
         for index, condicao in enumerate(td.get_conditions()):
-            self.generated_code += f'I_{index} = 0 #Inicialização do auxiliar da condição {condicao[0]}\n'
-        self.generated_code += 'I   = 0 #Inicialização do número da regra\n'
+            self.generated_code += f'{self.initial_spacing}I_{index} = 0 #Inicialização do auxiliar da condição {condicao[0]}\n'
+        self.generated_code += f'{self.initial_spacing}I   = 0 #Inicialização do número da regra\n'
 
     def _generate_if_or_elif_code(self, td: DecisionTable, condition:str, condition_value: str, index:int, aux_variable_value:int,if_or_elif:str) ->None:
         '''
         Gera o código para o if/elif em python, dado uma condição, um valor e um índice do auxiliar da condição
         '''
-        self.generated_code += f'{if_or_elif} {condition} {td.get_translated_set_by_name(condition_value)}:\n    I_{index} = {aux_variable_value}\n'
+        self.generated_code += f'{self.initial_spacing}{if_or_elif} {condition} {td.get_translated_set_by_name(condition_value)}:\n{self.initial_spacing+self.default_spacing}I_{index} = {aux_variable_value}\n'
 
     def _generate_action_id_calculation_code(self, td: DecisionTable) -> None:
         '''
         Gera o código que soma os valores das variáveis auxiliares das condições para definir o índice da ação no match
         '''
-        self.generated_code += 'I = '
+        self.generated_code += f'{self.initial_spacing}I = '
         entries_by_condition = self.list_entries_by_condition(td)
         for i in range(len(td.get_conditions())):
             self.generated_code += '('
@@ -79,14 +82,14 @@ class CodeGenerator():
         '''
         Gera o código que faz o match da indexação calculada
         '''
-        self.generated_code += f'match I:\n'    
+        self.generated_code += f'{self.initial_spacing}match I:\n'    
         for M in range(self.product_of_entries_by_condition(td)):
             #print(td.get_sequence_of_actions_by_id(M))
-            self.generated_code += f'    case {M}:'
+            self.generated_code += f'{self.initial_spacing + self.default_spacing}case {M}:'
             for action in td.get_sequence_of_actions_by_id(M):
-                self.generated_code += f'\n        {action}'
+                self.generated_code += f'\n{self.initial_spacing + 2*self.default_spacing}{action}'
             self.generated_code += '\n'
-        self.generated_code += f'    case _:\n        exit()\n'   
+        self.generated_code += f'{self.initial_spacing + self.default_spacing}case _:\n{self.initial_spacing + 2*self.default_spacing}exit()\n'   
          
     def _switch_method(self, td: DecisionTable) ->None:
         '''
