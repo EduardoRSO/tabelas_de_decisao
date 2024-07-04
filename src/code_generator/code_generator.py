@@ -1,5 +1,3 @@
-import operator
-from functools import reduce
 from decision_table.decision_table import DecisionTable
 
 class CodeGenerator():
@@ -30,33 +28,88 @@ class CodeGenerator():
         ''' 
         return self.method_name, self.method
     
+    def product_of_entries_by_condition(self, td: DecisionTable) ->int:
+        '''
+        Retorna o produto da quantidade de entradas para cada condição
+        '''
+        produto_de_entradas = 1
+        for condicao in td.get_conditions():
+           produto_de_entradas *= len(set(condicao[1]))
+        return produto_de_entradas
+    
+    def list_entries_by_condition(self, td: DecisionTable) ->list:
+        '''
+        Retorna uma lista com a quantidade de entradas para cada condição
+        '''
+        lista_de_entradas = []
+        for condicao in td.get_conditions():
+           lista_de_entradas.append(len(set(condicao[1])))
+        return lista_de_entradas
+    
+
+    def _generate_initialization_code(self, td: DecisionTable) ->None:
+        '''
+        Gera o código de inicialização das variáveis auxiliares necessárias para a definição da ação baseada nos valores das condições
+        '''
+        self.generated_code = ''
+        for index, condicao in enumerate(td.get_conditions()):
+            self.generated_code += f'I_{index} = 0 #Inicialização do auxiliar da condição {condicao[0]}\n'
+        self.generated_code += 'I   = 0 #Inicialização do número da regra\n'
+
+    def _generate_if_or_elif_code(self, td: DecisionTable, condition:str, condition_value: str, index:int, aux_variable_value:int,if_or_elif:str) ->None:
+        '''
+        Gera o código para o if/elif em python, dado uma condição, um valor e um índice do auxiliar da condição
+        '''
+        self.generated_code += f'{if_or_elif} {condition} {td.get_translated_set_by_name(condition_value)}:\n    I_{index} = {aux_variable_value}\n'
+
+    def _generate_action_id_calculation_code(self, td: DecisionTable) -> None:
+        '''
+        Gera o código que soma os valores das variáveis auxiliares das condições para definir o índice da ação no match
+        '''
+        self.generated_code += 'I = '
+        entries_by_condition = self.list_entries_by_condition(td)
+        for i in range(len(td.get_conditions())):
+            self.generated_code += '('
+            for j in range(i+1, len(td.get_conditions())):
+                self.generated_code += f'{entries_by_condition[j]}*'
+            self.generated_code += f'1)*I_{i} + '
+        self.generated_code += '1\n'
+    
+    def _generate_match_code(self, td: DecisionTable) -> None:
+        '''
+        Gera o código que faz o match da indexação calculada
+        '''
+        self.generated_code += f'match I:\n'    
+        for M in range(self.product_of_entries_by_condition(td)):
+            #print(td.get_sequence_of_actions_by_id(M))
+            self.generated_code += f'    case {M}:'
+            for action in td.get_sequence_of_actions_by_id(M):
+                self.generated_code += f'\n        {action}'
+            self.generated_code += '\n'
+        self.generated_code += f'    case _:\n        exit()\n'   
+         
     def _switch_method(self, td: DecisionTable) ->None:
         '''
         Implementação do método de tradução de tabelas de decisão: Switch Method
         '''
-        self.generated_code = "\n".join([f'I_{index} = 0 #Inicialização do auxiliar da condição {condicao}' for index, condicao in enumerate(td.get_conditions())])+'\nI   = 0 #Inicialização do número da regra\n'
+        self._generate_initialization_code(td)
         for index, linha_de_condicao in enumerate(td.get_conditions()):
             C = set()
             n_i = 0
             condicao = linha_de_condicao[0]
-            entradas = linha_de_condicao[1:]
+            entradas = linha_de_condicao[1:][0]
             for C_ij in entradas:
                 if C_ij not in C:
                     n_i +=1
                     c_ij = C_ij
                     if len(C) == 0:
-                        self.generated_code += f'if {condicao} {td.get_translated_set_by_name(c_ij)}:\n    I_{index} = 0\n'
+                        self._generate_if_or_elif_code(td,condicao,c_ij,index,0,'if')
                     else:
-                        self.generated_code += f'elif {condicao} {td.get_translated_set_by_name(c_ij)}:\n    I_{index} = {n_i-1}\n'
+                        self._generate_if_or_elif_code(td,condicao,c_ij,index,n_i-1,'elif')
                     C.add(c_ij) if c_ij != '-' else C.add(['Y','N'])
-    
-            entradas_por_condicao = [len(set(condicao))-1 for condicao in td.get_conditions()] 
-            self.generated_code += f"I = {'+'.join(['*'.join(['1']+[f'{entradas_por_condicao[j]}' for j in range(i+1,len(td.get_conditions()))])+f'*I_{i}' for i in range(len(td.get_conditions()))])}\n"
-            self.generated_code += f'match I:\n'
-            for M in range(reduce(operator.mul, entradas_por_condicao, 1)):
-                codigo_gerado += f'    case {M}:\n{trata_acao(td,M,"        ")}\n'
-            codigo_gerado += f'    case _:\n        exit()\n'    
-            return codigo_gerado
+        self._generate_action_id_calculation_code(td)
+        self._generate_match_code(td)
+        print(self.generated_code)
 
     def _fatoracoes_sucessivas(self, decision_table: DecisionTable) ->None:
         '''
@@ -76,9 +129,8 @@ class CodeGenerator():
         '''
         pass
 
-    def generate_code(self, decision_table: DecisionTable) ->str:
+    def generate_code(self, decision_table: DecisionTable) ->None:
         '''
         Gera código a partir de uma tabelade decisão com o método definido na instanciação
         '''
         self.method(decision_table)
-        return self.generated_code 
