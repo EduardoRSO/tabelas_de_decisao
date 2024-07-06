@@ -49,27 +49,32 @@ class CodeGenerator():
            lista_de_entradas.append(len(set(condicao[1])))
         return lista_de_entradas
     
+    def _generate_documentation_code(self, td: DecisionTable) ->None:
+        '''
+        Insere a TD como documentação de segundo nível para o extrator de auto-documentações
+        '''
+        self.generated_code = td.get_extracted_decision_table().replace('#TD','#2#TD') + '\n'
 
     def _generate_initialization_code(self, td: DecisionTable) ->None:
         '''
         Gera o código de inicialização das variáveis auxiliares necessárias para a definição da ação baseada nos valores das condições
         '''
-        self.generated_code = ''
+        self.generated_code += f'{self.initial_spacing}def decision_table_{td.get_name()} ->None:\n'
         for index, condicao in enumerate(td.get_conditions()):
-            self.generated_code += f'{self.initial_spacing}I_{index} = 0 #Inicialização do auxiliar da condição {condicao[0]}\n'
-        self.generated_code += f'{self.initial_spacing}I   = 0 #Inicialização do número da regra\n'
+            self.generated_code += f'{self.initial_spacing+self.default_spacing}I_{index} = 0 #Inicialização do auxiliar da condição {condicao[0]}\n'
+        self.generated_code += f'{self.initial_spacing+self.default_spacing}I   = 0 #Inicialização do número da regra\n'
 
     def _generate_if_or_elif_code(self, td: DecisionTable, condition:str, condition_value: str, index:int, aux_variable_value:int,if_or_elif:str) ->None:
         '''
         Gera o código para o if/elif em python, dado uma condição, um valor e um índice do auxiliar da condição
         '''
-        self.generated_code += f'{self.initial_spacing}{if_or_elif} {condition} {td.get_translated_set_by_name(condition_value)}:\n{self.initial_spacing+self.default_spacing}I_{index} = {aux_variable_value}\n'
+        self.generated_code += f'{self.initial_spacing+self.default_spacing}{if_or_elif} {condition} {td.get_translated_set_by_name(condition_value)}:\n{self.initial_spacing+2*self.default_spacing}I_{index} = {aux_variable_value}\n'
 
     def _generate_action_id_calculation_code(self, td: DecisionTable) -> None:
         '''
         Gera o código que soma os valores das variáveis auxiliares das condições para definir o índice da ação no match
         '''
-        self.generated_code += f'{self.initial_spacing}I = '
+        self.generated_code += f'{self.initial_spacing + self.default_spacing}I = '
         entries_by_condition = self.list_entries_by_condition(td)
         for i in range(len(td.get_conditions())):
             self.generated_code += '('
@@ -82,18 +87,19 @@ class CodeGenerator():
         '''
         Gera o código que faz o match da indexação calculada
         '''
-        self.generated_code += f'{self.initial_spacing}match I:\n'    
+        self.generated_code += f'{self.initial_spacing+self.default_spacing}match I:\n'    
         for M in range(self.product_of_entries_by_condition(td)):
-            self.generated_code += f'{self.initial_spacing + self.default_spacing}case {M}:'
+            self.generated_code += f'{self.initial_spacing + 2*self.default_spacing}case {M}:'
             for action in td.get_sequence_of_actions_by_id(M):
-                self.generated_code += f'\n{self.initial_spacing + 2*self.default_spacing}{action}'
+                self.generated_code += f'\n{self.initial_spacing + 3*self.default_spacing}{action}'
             self.generated_code += '\n'
-        self.generated_code += f'{self.initial_spacing + self.default_spacing}case _:\n{self.initial_spacing + 2*self.default_spacing}exit()\n'   
+        self.generated_code += f'{self.initial_spacing + 2*self.default_spacing}case _:\n{self.initial_spacing + 3*self.default_spacing}exit()\n'   
          
     def _switch_method(self, td: DecisionTable) ->None:
         '''
         Implementação do método de tradução de tabelas de decisão: Switch Method
         '''
+        self._generate_documentation_code(td)
         self._generate_initialization_code(td)
         for index, linha_de_condicao in enumerate(td.get_conditions()):
             C = set()
@@ -141,7 +147,6 @@ class CodeGenerator():
 #eu consegui obter o comportamento que eu desejava, que era a flexbilidade e facilidade para alteração e implementação de novas funções
 #agora resta continuar desenvolvendo o que havia sido proposto pelo Val na ultima reunião:
 
-# o código gerado deve carregar a TD documentada no início dele, convertendo a auto documentacao para o nível 2
 # implementar a possiblidade de invocar uma TD dentro de uma TD.
 #   Para isso, imagino que a solução mais fácil seria definir que toda TD é construída como uma função no código, porque a invocação seria uma mera chamada de função: td_<Nome>()
 #   Usar essa estratégia de funções permite até que a inserção seja mais simples: Posso optar por definir as funções no topo do código e inserir a chamada da função onde ela havia sido construída
