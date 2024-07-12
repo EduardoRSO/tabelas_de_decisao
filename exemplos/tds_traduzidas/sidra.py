@@ -1,5 +1,6 @@
 import json
 import logging
+import datetime
 import pandas as pd
 import sidrapy as IBGE
 from time import sleep
@@ -87,7 +88,13 @@ class HandlerDatabase():
             print(e)
             return False
 
-    def get_database(self, database_name:str):
+    def _set_all_databases(self) ->None:
+        self.index_register = self.set_database('index_register') 
+        self.group_register = self.set_database('group_register')
+        self.composition_register = self.set_database('composition_register ')
+        self.index_history = self.set_database('index_history')
+
+    def set_database(self, database_name:str) ->pd.DataFrame:
         database = self._notion_client.databases.query(self._secrets[database_name])
         table = []
         for row in database['results']:
@@ -97,7 +104,7 @@ class HandlerDatabase():
             table.append(column_values)
         return pd.DataFrame(table) 
         
-    def insert(self,database_name:str, df:pd.DataFrame):
+    def insert(self,database_name:str, df:pd.DataFrame) ->None:
         for _, row in df.iterrows():
             properties = {}
             for column in self._database_columns[database_name]:
@@ -110,15 +117,6 @@ class HandlerDatabase():
                     "properties": properties
                 }
             )
-
-    def is_updated(self):
-        pass
-
-    def has_index(self, index_name:str):
-        pass
-
-    def add_index(self, index_name:str):
-        pass
 
     def _safe_get(self, data:dict, dot_chained_keys:str):
         keys = dot_chained_keys.split('.')
@@ -160,19 +158,37 @@ class HandlerUpdater():
     def set_variation_and_weight(self,index_name:str):
         self.variation_and_weight = pd.DataFrame([])
 
+    def is_updated(self, date: datetime) ->bool:
+        return self.index_history.date.max() <= date
+
+    def has_index(self, index_name:str):
+        return index_name in self.index_register.index_name.to_list()
+    
+    def add_index(self, index_name:str) -> None:
+        pass
+
+    def add_index_history(self):
+        pass
+
+    def add_group(self):
+        pass
+
+    def add_composition(self):
+        pass
+
     def update_core(self):
         for index_name in self.ibge.INDEX_NAMES:
             if self.database.has_connection():
-                if self.database.has_index(index_name):
+                if self.has_index(index_name):
                     self.set_index_history(index_name)
-                    if self.database.is_updated():
+                    if self.is_updated():
                         continue
                     else:
                         self.set_max_date()
                         self.set_variation_and_weight()
                         self.database.insert(self.variation_and_weight)
                 else:
-                    self.database.add_index(index_name)
+                    self.add_index(index_name)
                     self.update_core()
             else:
                 if self.database.reconnection_tries > 5:
@@ -184,7 +200,20 @@ class HandlerUpdater():
 
 db = HandlerDatabase()
 
-#print(db.get_database('index_register'))
+# acho que o dbHandler deve ter apenas essas poucas funções, o resto pode ficar no Handler Updater
+# para deixar a tabela de decisao desse updater mais robusta, posso fazer com que ele cheque todas as datas em todas as execuções
+# buscando por lacunas nas datas, por exemplo do index history
+# buscando pela ausencia de grupos e aberturas em group_register
+# buscando pela ausencia de itens em composition_register
+# buscando pela ausencia de indices em index_register
 
-#def analysis_core():
-#    pass
+# depois que o hanlder updater assegurar que que tudo está válido, então partimos para a analise
+# vou replicar o dashboard:
+# 12M, Metas BCB, 3M SAAR, 6M SAAR, MoM SAAR
+# os gráficos podem ser feitos usando o matplot para facilitar. Não vou me ater a inserir essas séries na base
+
+# assim que conseguir o resultado final, partimos para a replicação usando tabelas de decisão 
+# usamos esse projeto como teste do code_inserter e code_generator
+# teremos feito um exemplo bem robusto de aplicação de tabelas de decisão
+# os outros exemplos podem ser mais bobinhos, então aí entra as trilhas do bcc fazendo chamadas recursivas de TDS
+# e o primeiro exemplo pode ser o mais trivial, o teste de salário do Satoshi como referência
