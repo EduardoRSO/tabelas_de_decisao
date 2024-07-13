@@ -220,7 +220,7 @@ class handlerIBGE():
                 "servicos": 1
             },
             "comercializaveis": { "indice geral": 1, "nao comercializaveis": -1, "monitorados": -1 },
-            "nucleo ex0": { "alimentacao no domicilio": -1, "monitorados": -1 },
+            "nucleo ex0": { "indice geral":1,"alimentacao no domicilio": -1, "monitorados": -1 },
             "nucleo ex1": {
                 "cereais, leguminosas e oleaginosas": -1,
                 "tuberculos, raizes e legumes": -1,
@@ -257,6 +257,7 @@ class handlerIBGE():
                 "monitorados": -1
             },
             "nucleo ex3": {
+                "indice geral": 1,
                 "alimentacao no domicilio": -1,
                 "aparelhos eletroeletronicos": -1,
                 "automovel novo": -1,
@@ -324,20 +325,29 @@ class handlerIBGE():
     def set_granular_data(self) -> None:
         ipca = self.set_variation_and_weight('IPCA')
         ipca_15 = self.set_variation_and_weight('IPCA-15')
-        self.granular_data = pd.concat([ipca,ipca_15],axis=0)
+        self.granular_data = pd.concat([ipca,ipca_15],ignore_index=True, axis=0)
         self.granular_data = self.granular_data.groupby(['date', 'index_name']).apply(lambda x: x.drop_duplicates(subset='item_desc')).reset_index(drop=True)
+        self.granular_data.to_csv('raw_ibge.csv',index=False)
+        self.granular_data = pd.read_csv('raw_ibge.csv') #this is the funniest bug i have ever seen
+
+    def _aux_calculate_filtered_df(self, composition_name:str) ->pd.DataFrame:
+        current_composition = []
+        for composition_item_name, composition_item_factor in self.COMPOSITIONS_BCB[composition_name].items():
+            filtered_df = self.data[self.data.item_desc == composition_item_name].copy()
+            filtered_df.item_variation *= composition_item_factor
+            filtered_df.item_weight *= composition_item_factor
+            current_composition.append(filtered_df)
+        return pd.concat(
+                    current_composition,
+                    ignore_index=True,
+                    axis=0
+                )
 
     def calculate_bcb_compositions(self):
-        for composition_name, composition_items in self.COMPOSITIONS_BCB.items():
-            current_composition = []
-            for composition_item_name, composition_item_factor in composition_items.items():
-                filtered_df = self.granular_data[self.granular_data.item_desc == composition_item_name].copy()
-                filtered_df.item_variation *= composition_item_factor
-                filtered_df.item_weight *= composition_item_factor
-                current_composition.append(filtered_df)
-            current_composition = pd.concat(
-                    current_composition,ignore_index=True
-                ).groupby(
+        self.data = self.granular_data.copy()
+        for composition_name in self.COMPOSITIONS_BCB.keys():
+            df = self._aux_calculate_filtered_df(composition_name)
+            df = df.groupby(
                         [
                             'date',
                             'index_name'
@@ -348,9 +358,21 @@ class handlerIBGE():
                                 'item_weight': 'sum'
                             }
                         ).reset_index()
-            current_composition['item_desc'] = composition_name
-            current_composition['item_code'] = composition_name
-            self.granular_data = pd.concat([self.granular_data, current_composition],ignore_index=True)
+            df['item_desc'] = composition_name
+            df['item_code'] = composition_name
+            self.data = pd.concat(
+                [
+                    self.data, 
+                    df
+                ],
+                ignore_index = True,
+                axis = 0
+            )
+        self.data.to_csv('ibge.csv',index=False)
+
+    def set_data(self):
+        self.set_granular_data()
+        self.calculate_bcb_compositions()
 
 class HandlerDatabase():
 
@@ -395,7 +417,7 @@ class HandlerDatabase():
     def _set_all_databases(self) ->None:
         self.index_register = self.set_database('index_register') 
         self.group_register = self.set_database('group_register')
-        self.composition_register = self.set_database('composition_register ')
+        self.composition_register = self.set_database('composition_register')
         self.index_history = self.set_database('index_history')
 
     def set_database(self, database_name:str) ->pd.DataFrame:
@@ -451,62 +473,67 @@ class HandlerUpdater():
 
     def __init__(self):
         self.ibge = handlerIBGE()
+        #self.ibge.granular_data = pd.read_csv('raw_ibge.csv')
         self.database = HandlerDatabase()
 
-    def set_max_date(self, df:pd.DataFrame):
-        self.current_max_date = df['date'].max()
-
-    def set_index_history(self, index_name:str):
-        self.current_index_history = self.database.get_index_history(index_name)
-        
-    def set_variation_and_weight(self,index_name:str):
-        self.variation_and_weight = pd.DataFrame([])
-
-    def is_updated(self, date: datetime) ->bool:
-        return self.index_history.date.max() <= date
-
-    def has_index(self, index_name:str):
-        return index_name in self.index_register.index_name.to_list()
+    def index_register_is_valid(self):
+        return len(self.ibge.data.index_name.unique()) == len(self.database.index_register)
     
-    def add_index(self, index_name:str) -> None:
+    def group_register_is_valid(self):
+        return len(self.ibge.data.item_desc.unique()) == len(self.database.group_register)
+
+    def composition_register_is_valid(self):
+        return self._count_items(self.ibge.COMPOSITIONS_BCB) == len(self.database.composition_register)
+
+    def index_history_is_valid(self):
+        return len(self.ibge.data) == len(self.database.index_history)
+
+    def repair_index_register(self):
+        #insert all on index_register
+        pass
+    
+    def repair_group_register(self):
+        #insert all on group_register
         pass
 
-    def add_index_history(self):
+    def repair_composition_register(self):
+        #insert all on composition_register
         pass
 
-    def add_group(self):
-        pass
-
-    def add_composition(self):
+    def repair_index_history(self):
+        #insert all on index_history
         pass
 
     def update_core(self):
-        for index_name in self.ibge.INDEX_NAMES:
-            if self.database.has_connection():
-                self.set_ibge_data()
-                if not self.index_register_is_valid():
-                    self.repair_index_register()
-                if not self.group_register_is_valid():
-                    self.repair_group_register()
-                if not self.composition_register_is_valid():
-                    self.repair_composition_register()
-                if not self.index_history_is_valid():
-                    self.repair_index_history()
+        if self.database.has_connection():
+            self.database._set_all_databases()
+            self.ibge.set_data()
+            if not self.index_register_is_valid():
+                self.repair_index_register()
+            if not self.group_register_is_valid():
+                self.repair_group_register()
+            if not self.composition_register_is_valid():
+                self.repair_composition_register()
+            if not self.index_history_is_valid():
+                self.repair_index_history()
+        else:
+            if self.database.reconnection_tries > 5:
+                logging.ERROR(f' [+] Could not connect to the database!')
+                return
+            self.database.increase_reconnection_tries()
+            self.update_core()
+
+    def _count_items(self,d):
+        count = 0
+        for key, value in d.items():
+            if isinstance(value, dict):
+                count += self._count_items(value) 
             else:
-                if self.database.reconnection_tries > 5:
-                    logging.ERROR(f' [+] Could not connect to the database!')
-                    return
-                self.database.increase_reconnection_tries()
-                self.update_core()
-
-# antes de continuar desenvolvendo o core updater.
-# vou fazer com que o HandlerIBGE calcule as aberturas <variação e peso>
-# assim o handlerUpdater apenas irá copiar o dataframe gerado pelo handlerIBGE e fazer as reparações necessárias
-
-ibge = handlerIBGE()    
-ibge.set_granular_data()
-ibge.calculate_bcb_compositions()
-ibge.granular_data.to_csv('ibge.csv',index=False)
+                count += 1 
+        return count
+    
+up = HandlerUpdater()
+up.update_core()
 
 # se o db tem conexão
 #   puxa os dados do ibge
