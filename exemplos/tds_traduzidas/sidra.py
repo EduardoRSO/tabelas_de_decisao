@@ -7,7 +7,9 @@ from datetime import datetime
 from unidecode import unidecode
 from notion_client import Client as NotionClient
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# Set up the logger
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class handlerIBGE():
     
@@ -470,44 +472,53 @@ class HandlerDatabase():
         self.reconnection_tries +=1
 
 class HandlerUpdater():
-
     def __init__(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.__init__ with no parameters')
         self.ibge = handlerIBGE()
-        #self.ibge.granular_data = pd.read_csv('raw_ibge.csv')
+        self.ibge.data = pd.read_csv('raw_ibge.csv')
         self.database = HandlerDatabase()
 
     def index_register_is_valid(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.index_register_is_valid with no parameters')
         return len(self.ibge.data.index_name.unique()) == len(self.database.index_register)
     
     def group_register_is_valid(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.group_register_is_valid with no parameters')
         return len(self.ibge.data.item_desc.unique()) == len(self.database.group_register)
 
     def composition_register_is_valid(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.composition_register_is_valid with no parameters')
         return self._count_items(self.ibge.COMPOSITIONS_BCB) == len(self.database.composition_register)
 
     def index_history_is_valid(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.index_history_is_valid with no parameters')
         return len(self.ibge.data) == len(self.database.index_history)
 
     def repair_index_register(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.repair_index_register with no parameters')
         #insert all on index_register
         pass
     
     def repair_group_register(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.repair_group_register with no parameters')
         #insert all on group_register
         pass
 
     def repair_composition_register(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.repair_composition_register with no parameters')
         #insert all on composition_register
         pass
 
     def repair_index_history(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.repair_index_history with no parameters')
         #insert all on index_history
         pass
 
     def update_core(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.update_core with no parameters')
         if self.database.has_connection():
             self.database._set_all_databases()
-            self.ibge.set_data()
+            #self.ibge.set_data()
             if not self.index_register_is_valid():
                 self.repair_index_register()
             if not self.group_register_is_valid():
@@ -518,12 +529,13 @@ class HandlerUpdater():
                 self.repair_index_history()
         else:
             if self.database.reconnection_tries > 5:
-                logging.ERROR(f' [+] Could not connect to the database!')
+                logger.error(f' [+] Could not connect to the database!')
                 return
             self.database.increase_reconnection_tries()
             self.update_core()
 
-    def _count_items(self,d):
+    def _count_items(self, d):
+        logger.info(f' [+] Executing {self.__class__.__name__}._count_items with parameters: {d}')
         count = 0
         for key, value in d.items():
             if isinstance(value, dict):
