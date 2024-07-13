@@ -15,6 +15,261 @@ class handlerIBGE():
         self.INDEX_NAMES = ['IPCA', 'IPCA-15']
         self.TABLE_ID = {'IPCA': '7060','IPCA-15': '7062'}
         self.VARIABLE_ID = {'IPCA': {'VARIAÇÃO MENSAL': '63','PESO MENSAL': '66'},'IPCA-15': {'VARIAÇÃO MENSAL': '355','PESO MENSAL': '357'}}
+        # Obtido em : https://www.bcb.gov.br/conteudo/relatorioinflacao/EstudosEspeciais/EE069_Atualizacoes_da_estrutura_de_ponderacao_do_IPCA_e_repercussao_nas_suas_classificacoes.pdf
+        # Granularizar todos que contem "exceto"
+        self.ABERTURAS_BCB = {
+            "Livres": {
+                "monitorados": -1
+                },
+            "Alimentos": {
+                "Alimentação no domicílio": 1
+                },
+            "Alimentos in natura": {
+                "Tubérculos, raízes e legumes": 1,
+                "Hortaliças e verduras": 1,
+                "Frutas": 1,
+                "Ovo de galinha": 1
+                }
+            ,
+            "Alimentos semi-elaborados": {
+                "Cereais, leguminosas e oleaginosas": 1,
+                "Carnes": 1,
+                "Pescados": 1,
+                "Frango inteiro": 1,
+                "Frango em pedaços": 1,
+                "Leite longa vida": 1
+                }
+            ,
+            "Alimentos industrializados": {
+                "Farinhas, féculas e massas": 1,
+                "Açúcares e derivados": 1,
+                "Carnes e peixes industrializados": 1,
+                "Leite e derivados (exceto Leite longa vida)": 1,
+                "Panificados": 1,
+                "Óleos e gorduras": 1,
+                "Bebidas e infusões": 1,
+                "Enlatados e conservas": 1,
+                "Sal e condimentos": 1}
+            ,
+            "Serviços": {
+                "Alimentação fora do domicílio": 1,
+                "Aluguel residencial": 1,
+                "Condomínio": 1,
+                "Mudança": 1,
+                "Mão de obra (Reparos)": 1,
+                "Consertos e manutenção": 1,
+                "Passagem aérea": 1,
+                "Transporte escolar": 1,
+                "Transporte por aplicativo": 1,
+                "Seguro voluntário de veículo": 1,
+                "Conserto de automóvel": 1,
+                "Estacionamento": 1,
+                "Pintura de veículo": 1,
+                "Aluguel de veículo": 1,
+                "Serviços médicos e dentários": 1,
+                "Serviços laboratoriais e hospitalares": 1,
+                "Serviços pessoais (exceto Cartório e Conselho de classe)": 1,
+                "Recreação (exceto Jogos de azar, Instrumento musical, Bicicleta, Alimento para animais, Brinquedo e Material de caça e pesca)": 1,
+                "Cursos regulares": 1,
+                "Cursos diversos": 1,
+                "Plano de telefonia móvel": 1,
+                "TV por assinatura": 1,
+                "Acesso à internet": 1,
+                "Serviços de streaming": 1,
+                "Combo de telefonia, internet e TV por assinatura": 1
+                }
+            ,
+            "Serviços Subjacente": {
+                "Alimentação fora do domicílio": 1,
+                "Aluguel residencial": 1,
+                "Condomínio": 1,
+                "Mudança": 1,
+                "Consertos e manutenção": 1,
+                "Transporte escolar": 1,
+                "Seguro voluntário de veículo": 1,
+                "Conserto de automóvel": 1,
+                "Estacionamento": 1,
+                "Pintura de veículo": 1,
+                "Aluguel de veículo": 1,
+                "Serviços médicos e dentários": 1,
+                "Serviços laboratoriais e hospitalares": 1,
+                "Costureira": 1,
+                "Manicure": 1,
+                "Cabeleireiro e barbeiro": 1,
+                "Depilação": 1,
+                "Despachante": 1,
+                "Serviço bancário": 1,
+                "Sobrancelha": 1,
+                "Clube": 1,
+                "Tratamento de animais (clínica)": 1,
+                "Casa noturna": 1,
+                "Serviço de higiene para animais": 1,
+                "Cinema, teatro e concertos": 1
+            }
+            ,
+            "Serviços Ex-Subjacente": {
+                "Serviços Subjacente": -1
+                },
+            "Duráveis": {
+                "Mobiliário": 1,
+                "Artigos de iluminação": 1,
+                "Tapete": 1,
+                "Refrigerador": 1,
+                "Ar-condicionado": 1,
+                "Máquina de lavar roupa": 1,
+                "Fogão": 1,
+                "Chuveiro elétrico": 1,
+                "Televisor": 1,
+                "Aparelho de som": 1,
+                "Computador pessoal": 1,
+                "Joias e bijuterias": 1,
+                "Automóvel novo": 1,
+                "Automóvel usado": 1,
+                "Motocicleta": 1,
+                "Óculos de grau": 1,
+                "Instrumento musical": 1,
+                "Bicicleta": 1,
+                "Aparelho telefônico": 1
+                }
+            ,
+            "Semi-duráveis": {
+                "Cortina": 1,
+                "Utensílios de metal": 1,
+                "Utensílios de vidro e louça": 1,
+                "Utensílios de plástico": 1,
+                "Utensílios para bebê": 1,
+                "Cama, mesa e banho": 1,
+                "Ventilador": 1,
+                "Videogame (console)": 1,
+                "Roupas": 1,
+                "Calçados e acessórios": 1,
+                "Tecidos e armarinhos": 1,
+                "Acessorios e peças (Veículos)": 1,
+                "Pneu": 1,
+                "Brinquedo": 1,
+                "Material de caça e pesca": 1,
+                "Livro didático": 1,
+                "Livro não didático": 1
+                }
+            ,
+            "Não duráveis": {
+                "Alimentação no domicílio": 1,
+                "Reparos (habitação) exceto mão-de-obra": 1,
+                "Artigos de limpeza": 1,
+                "Carvão vegetal": 1,
+                "Flores naturais": 1,
+                "Óleo lubrificante": 1,
+                "Etanol": 1,
+                "Higiene pessoal": 1,
+                "Alimento para animais": 1,
+                "Cigarro": 1,
+                "Jornal diário": 1,
+                "Revista": 1,
+                "Caderno": 1,
+                "Artigos de papelaria": 1
+                }
+            ,
+            "Monitorados": {
+                "Taxa de água e esgoto": 1,
+                "Gás de botijão": 1,
+                "Gás encanado": 1,
+                "Energia elétrica residencial": 1,
+                "Ônibus urbano": 1,
+                "Táxi": 1,
+                "Trem": 1,
+                "Ônibus intermunicipal": 1,
+                "Ônibus interestadual": 1,
+                "Metrô": 1,
+                "Integração transporte público": 1,
+                "Emplacamento e licença": 1,
+                "Multa": 1,
+                "Pedágio": 1,
+                "Gasolina": 1,
+                "Óleo diesel": 1,
+                "Gás veicular": 1,
+                "Produtos farmacêuticos": 1,
+                "Plano de saúde": 1,
+                "Cartório": 1,
+                "Conselho de classe": 1,
+                "Jogos de azar": 1,
+                "Correio": 1,
+                "Plano de telefonia fixa": 1
+                }
+            ,
+            "Comercializáveis": {
+                "Não comercializáveis": -1,
+                "Monitorados": -1
+                },
+            "Não comercializáveis": {
+                "Todos os tipos de feijão": 1,
+                "Flocos de milho": 1,
+                "Farinha de mandioca": 1,
+                "Tubérculos, raízes e legumes": 1,
+                "Hortaliças e verduras": 1,
+                "Pescados (exceto salmão)": 1,
+                "Leite e derivados (exceto leite em pó)": 1,
+                "Pão francês": 1,
+                "Pão doce": 1,
+                "Bolo": 1,
+                "Cimento (Reparos)": 1,
+                "Tijolo": 1,
+                "Areia": 1,
+                "Carvão vegetal": 1,
+                "Automóvel usado": 1,
+                "Alimento para animais": 1,
+                "Leitura": 1,
+                "Serviços": 1
+                },
+            "Núcleo EX0": {
+                "Alimentação no domicílio": -1,
+                "Monitorados": -1
+                },
+            "Núcleo EX1": {
+                "Cereais, leguminosas e oleaginosas": -1,
+                "Tubérculos, raízes e legumes": -1,
+                "Açúcares e derivados": -1,
+                "Hortaliças e Verduras": -1,
+                "Frutas": -1,
+                "Carnes": -1,
+                "Pescados": -1,
+                "Aves e ovos": -1,
+                "Leite e derivados": -1,
+                "Óleos e gorduras": -1,
+                "Combustíveis (domésticos)": -1,
+                "Combustíveis (veículos)": -1}
+            ,
+            "Núcleo EX2": {
+                "Cereais, leguminosas e oleaginosas": -1,
+                "Farinhas, féculas e massas": -1,
+                "Tubérculos, raízes e legumes": -1,
+                "Açúcares e derivados": -1,
+                "Hortaliças e Verduras": -1,
+                "Frutas": -1,
+                "Carnes": -1,
+                "Pescados": -1,
+                "Aves e ovos": -1,
+                "Leite e derivados": -1,
+                "Óleos e gorduras": -1,
+                "Sal e condimentos": -1,
+                "Aparelhos eletroeletrônicos": -1,
+                "Automóvel novo": -1,
+                "Automóvel usado": -1,
+                "Etanol": -1,
+                "Fumo": -1,
+                "Serviços Ex-Subjacente": -1,
+                "Monitorados": -1}
+            ,
+            "Núcleo EX3": {
+                "Alimentação no domicílio": -1,
+                "Aparelhos eletroeletrônicos": -1,
+                "Automóvel novo": -1,
+                "Automóvel usado": -1,
+                "Etanol": -1,
+                "Fumo": -1,
+                "Serviços Ex-subjacente": -1,
+                "Monitorados": -1}
+            
+        }
 
     def get_data(self, table_name:str, variable_name:str, date:str) ->pd.DataFrame:
         return IBGE.get_table(
@@ -140,7 +395,7 @@ class HandlerDatabase():
                 obj = {key: obj}
         return obj
     
-    def retry_connection(self):
+    def increase_reconnection_tries(self):
         self.reconnection_tries +=1
 
 class HandlerUpdater():
@@ -179,26 +434,40 @@ class HandlerUpdater():
     def update_core(self):
         for index_name in self.ibge.INDEX_NAMES:
             if self.database.has_connection():
-                if self.has_index(index_name):
-                    self.set_index_history(index_name)
-                    if self.is_updated():
-                        continue
-                    else:
-                        self.set_max_date()
-                        self.set_variation_and_weight()
-                        self.database.insert(self.variation_and_weight)
-                else:
-                    self.add_index(index_name)
-                    self.update_core()
+                self.set_ibge_data()
+                if not self.index_register_is_valid():
+                    self.repair_index_register()
+                if not self.group_register_is_valid():
+                    self.repair_group_register()
+                if not self.composition_register_is_valid():
+                    self.repair_composition_register()
+                if not self.index_history_is_valid():
+                    self.repair_index_history()
             else:
                 if self.database.reconnection_tries > 5:
                     logging.ERROR(f' [+] Could not connect to the database!')
                     return
-                self.database.retry_connection()
+                self.database.increase_reconnection_tries()
                 self.update_core()
 
-
 db = HandlerDatabase()
+
+# antes de continuar desenvolvendo o core updater.
+# vou fazer com que o HandlerIBGE calcule as aberturas <variação e peso>
+# assim o handlerUpdater apenas irá copiar o dataframe gerado pelo handlerIBGE e fazer as reparações necessárias
+
+# se o db tem conexão
+#   puxa os dados do ibge
+#   se index_register invalido
+#       atualiza index_register
+#   se index_history invalido
+#       atualiza index_history
+#   se group_register invalido
+#       atualiza group_register
+#   se composition_regiser
+#       atualiza composition_register
+# senao
+#   tenta novamente          
 
 # acho que o dbHandler deve ter apenas essas poucas funções, o resto pode ficar no Handler Updater
 # para deixar a tabela de decisao desse updater mais robusta, posso fazer com que ele cheque todas as datas em todas as execuções
