@@ -1,9 +1,9 @@
 import json
 import logging
-import datetime
 import pandas as pd
 import sidrapy as IBGE
 from time import sleep
+from datetime import datetime
 from unidecode import unidecode
 from notion_client import Client as NotionClient
 
@@ -17,7 +17,36 @@ class handlerIBGE():
         self.VARIABLE_ID = {'IPCA': {'VARIAÇÃO MENSAL': '63','PESO MENSAL': '66'},'IPCA-15': {'VARIAÇÃO MENSAL': '355','PESO MENSAL': '357'}}
         # Obtido em : https://www.bcb.gov.br/conteudo/relatorioinflacao/EstudosEspeciais/EE069_Atualizacoes_da_estrutura_de_ponderacao_do_IPCA_e_repercussao_nas_suas_classificacoes.pdf
         self.COMPOSITIONS_BCB = {
-            "livres": { "monitorados": -1 },
+            "monitorados": {
+                "taxa de agua e esgoto": 1,
+                "gas de botijao": 1,
+                "gas encanado": 1,
+                "energia eletrica residencial": 1,
+                "onibus urbano": 1,
+                "taxi": 1,
+                "trem": 1,
+                "onibus intermunicipal": 1,
+                "onibus interestadual": 1,
+                "metro": 1,
+                "integracao transporte publico": 1,
+                "emplacamento e licenca": 1,
+                "multa": 1,
+                "pedagio": 1,
+                "gasolina": 1,
+                "oleo diesel": 1,
+                "gas veicular": 1,
+                "produtos farmaceuticos": 1,
+                "plano de saude": 1,
+                "cartorio": 1,
+                "conselho de classe": 1,
+                "jogos de azar": 1,
+                "correio": 1,
+                "plano de telefonia fixa": 1
+            },
+            "livres": { 
+                "indice geral": 1,
+                "monitorados": -1,
+                },
             "alimentos": { "alimentacao no domicilio": 1 },
             "alimentos in natura": {
                 "tuberculos, raizes e legumes": 1,
@@ -37,7 +66,7 @@ class handlerIBGE():
                 "farinhas, feculas e massas": 1,
                 "acucares e derivados": 1,
                 "carnes e peixes industrializados": 1,
-                "leite e derivados": 1,
+                "leites e derivados": 1,
                 "leite longa vida": -1,
                 "panificados": 1,
                 "oleos e gorduras": 1,
@@ -50,7 +79,7 @@ class handlerIBGE():
                 "aluguel residencial": 1,
                 "condominio": 1,
                 "mudanca": 1,
-                "mao de obra (reparos)": 1,
+                "mao de obra": 1,
                 "consertos e manutencao": 1,
                 "passagem aerea": 1,
                 "transporte escolar": 1,
@@ -107,7 +136,7 @@ class handlerIBGE():
                 "servico de higiene para animais": 1,
                 "cinema, teatro e concertos": 1
             },
-            "servicos ex-subjacente": { "servicos subjacente": -1 },
+            "servicos ex-subjacente": { "servicos":1,"servicos subjacente": -1 },
             "duraveis": {
                 "mobiliario": 1,
                 "artigos de iluminacao": 1,
@@ -140,8 +169,8 @@ class handlerIBGE():
                 "videogame (console)": 1,
                 "roupas": 1,
                 "calcados e acessorios": 1,
-                "tecidos e armarinhos": 1,
-                "acessorios e pecas (veiculos)": 1,
+                "tecidos e armarinho": 1,
+                "acessorios e pecas": 1,
                 "pneu": 1,
                 "brinquedo": 1,
                 "material de caca e pesca": 1,
@@ -151,7 +180,7 @@ class handlerIBGE():
             "nao duraveis": {
                 "alimentacao no domicilio": 1,
                 "reparos" : 1,
-                "mao-de-obra": -1,
+                "mao de obra": -1,
                 "artigos de limpeza": 1,
                 "carvao vegetal": 1,
                 "flores naturais": 1,
@@ -165,47 +194,23 @@ class handlerIBGE():
                 "caderno": 1,
                 "artigos de papelaria": 1
             },
-            "monitorados": {
-                "taxa de agua e esgoto": 1,
-                "gas de botijao": 1,
-                "gas encanado": 1,
-                "energia eletrica residencial": 1,
-                "onibus urbano": 1,
-                "taxi": 1,
-                "trem": 1,
-                "onibus intermunicipal": 1,
-                "onibus interestadual": 1,
-                "metro": 1,
-                "integracao transporte publico": 1,
-                "emplacamento e licenca": 1,
-                "multa": 1,
-                "pedagio": 1,
-                "gasolina": 1,
-                "oleo diesel": 1,
-                "gas veicular": 1,
-                "produtos farmaceuticos": 1,
-                "plano de saude": 1,
-                "cartorio": 1,
-                "conselho de classe": 1,
-                "jogos de azar": 1,
-                "correio": 1,
-                "plano de telefonia fixa": 1
-            },
-            "comercializaveis": { "nao comercializaveis": -1, "monitorados": -1 },
             "nao comercializaveis": {
-                "todos os tipos de feijao": 1,
+                "feijao - mulatinho" : 1,
+                "feijao - preto" : 1,
+                "feijao - macacar (fradinho)" : 1,
+                "feijao - carioca (rajado)" : 1,
                 "flocos de milho": 1,
                 "farinha de mandioca": 1,
                 "tuberculos, raizes e legumes": 1,
                 "hortalicas e verduras": 1,
                 "pescados":1,
-                "salmao)": -1,
-                "leite e derivados":1,
-                "leite em po)": -1,
+                "salmao": -1,
+                "leites e derivados":1,
+                "leite em po": -1,
                 "pao frances": 1,
                 "pao doce": 1,
                 "bolo": 1,
-                "cimento (reparos)": 1,
+                "cimento": 1,
                 "tijolo": 1,
                 "areia": 1,
                 "carvao vegetal": 1,
@@ -214,6 +219,7 @@ class handlerIBGE():
                 "leitura": 1,
                 "servicos": 1
             },
+            "comercializaveis": { "indice geral": 1, "nao comercializaveis": -1, "monitorados": -1 },
             "nucleo ex0": { "alimentacao no domicilio": -1, "monitorados": -1 },
             "nucleo ex1": {
                 "cereais, leguminosas e oleaginosas": -1,
@@ -224,7 +230,7 @@ class handlerIBGE():
                 "carnes": -1,
                 "pescados": -1,
                 "aves e ovos": -1,
-                "leite e derivados": -1,
+                "leites e derivados": -1,
                 "oleos e gorduras": -1,
                 "combustiveis (domesticos)": -1,
                 "combustiveis (veiculos)": -1
@@ -239,7 +245,7 @@ class handlerIBGE():
                 "carnes": -1,
                 "pescados": -1,
                 "aves e ovos": -1,
-                "leite e derivados": -1,
+                "leites e derivados": -1,
                 "oleos e gorduras": -1,
                 "sal e condimentos": -1,
                 "aparelhos eletroeletronicos": -1,
@@ -262,15 +268,33 @@ class handlerIBGE():
             }
             }
 
+    def _generate_period_string(self):
+        current_date = datetime.now()
+        end_year = current_date.year
+        end_month = current_date.month
+        
+        date_list = []
+        year = 2020
+        month = 1
+        
+        while (year < end_year) or (year == end_year and month <= end_month):
+            date_list.append(f"{year:04d}{month:02d}")
+            month += 1
+            if month > 12:
+                month = 1
+                year += 1
+        
+        return ','.join(date_list)
 
-    def get_data(self, table_name:str, variable_name:str, date:str) ->pd.DataFrame:
+
+    def get_data(self, table_name:str, variable_name:str) ->pd.DataFrame:
         return IBGE.get_table(
             table_code = self.TABLE_ID[table_name],
             territorial_level='1',
             ibge_territorial_code='all',
             variable= self.VARIABLE_ID[table_name][variable_name],
             classification= '315/all',
-            period=date,
+            period=self._generate_period_string(),
             header='n',
             format='pandas'
         )
@@ -290,22 +314,43 @@ class handlerIBGE():
         df = pd.merge(variation, weight, how='inner',on=['date','item_code','item_desc'])
         return df[['date','item_code', 'item_desc','item_variation','item_weight']]
 
-    def set_variation_and_weight(self, index_name: str, period:str) ->pd.DataFrame:
-        df1 = self.format_data(self.get_data(index_name,'VARIAÇÃO MENSAL', period))
-        df2 = self.format_data(self.get_data(index_name,'PESO MENSAL', period))
-        self.granular_data = self.merge_formatted_data(df1,df2)
+    def set_variation_and_weight(self, index_name: str) ->pd.DataFrame:
+        variacao = self.format_data(self.get_data(index_name,'VARIAÇÃO MENSAL'))
+        peso = self.format_data(self.get_data(index_name,'PESO MENSAL'))
+        df = self.merge_formatted_data(variacao,peso)
+        df['index_name'] = index_name
+        return df
+    
+    def set_granular_data(self) -> None:
+        ipca = self.set_variation_and_weight('IPCA')
+        ipca_15 = self.set_variation_and_weight('IPCA-15')
+        self.granular_data = pd.concat([ipca,ipca_15],axis=0)
+        self.granular_data = self.granular_data.groupby(['date', 'index_name']).apply(lambda x: x.drop_duplicates(subset='item_desc')).reset_index(drop=True)
 
     def calculate_bcb_compositions(self):
         for composition_name, composition_items in self.COMPOSITIONS_BCB.items():
+            current_composition = []
             for composition_item_name, composition_item_factor in composition_items.items():
-                if composition_item_name not in self.granular_data.item_desc.to_list():
-                    print(f' [-] {composition_name} {composition_item_name} {composition_item_factor}')
-
-ibge = handlerIBGE()    
-ibge.granular_data = pd.read_csv('ibge.csv')
-#print(ibge.granular_data)
-#exit()
-ibge.calculate_bcb_compositions()
+                filtered_df = self.granular_data[self.granular_data.item_desc == composition_item_name].copy()
+                filtered_df.item_variation *= composition_item_factor
+                filtered_df.item_weight *= composition_item_factor
+                current_composition.append(filtered_df)
+            current_composition = pd.concat(
+                    current_composition,ignore_index=True
+                ).groupby(
+                        [
+                            'date',
+                            'index_name'
+                        ]
+                    ).agg(
+                            {
+                                'item_variation': 'sum',
+                                'item_weight': 'sum'
+                            }
+                        ).reset_index()
+            current_composition['item_desc'] = composition_name
+            current_composition['item_code'] = composition_name
+            self.granular_data = pd.concat([self.granular_data, current_composition],ignore_index=True)
 
 class HandlerDatabase():
 
@@ -457,6 +502,11 @@ class HandlerUpdater():
 # antes de continuar desenvolvendo o core updater.
 # vou fazer com que o HandlerIBGE calcule as aberturas <variação e peso>
 # assim o handlerUpdater apenas irá copiar o dataframe gerado pelo handlerIBGE e fazer as reparações necessárias
+
+ibge = handlerIBGE()    
+ibge.set_granular_data()
+ibge.calculate_bcb_compositions()
+ibge.granular_data.to_csv('ibge.csv',index=False)
 
 # se o db tem conexão
 #   puxa os dados do ibge
