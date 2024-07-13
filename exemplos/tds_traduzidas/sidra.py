@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 class handlerIBGE():
     
     def __init__(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.__init__ with no parameters')
         self.INDEX_NAMES = ['IPCA', 'IPCA-15']
         self.TABLE_ID = {'IPCA': '7060','IPCA-15': '7062'}
         self.VARIABLE_ID = {'IPCA': {'VARIAÇÃO MENSAL': '63','PESO MENSAL': '66'},'IPCA-15': {'VARIAÇÃO MENSAL': '355','PESO MENSAL': '357'}}
@@ -272,6 +273,7 @@ class handlerIBGE():
             }
 
     def _generate_period_string(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}._generate_period_string with no parameters')
         current_date = datetime.now()
         end_year = current_date.year
         end_month = current_date.month
@@ -289,90 +291,76 @@ class handlerIBGE():
         
         return ','.join(date_list)
 
-
-    def get_data(self, table_name:str, variable_name:str) ->pd.DataFrame:
+    def get_data(self, table_name: str, variable_name: str) -> pd.DataFrame:
+        logger.info(f' [+] Executing {self.__class__.__name__}.get_data with parameters: table_name={table_name}, variable_name={variable_name}')
         return IBGE.get_table(
-            table_code = self.TABLE_ID[table_name],
+            table_code=self.TABLE_ID[table_name],
             territorial_level='1',
             ibge_territorial_code='all',
-            variable= self.VARIABLE_ID[table_name][variable_name],
-            classification= '315/all',
+            variable=self.VARIABLE_ID[table_name][variable_name],
+            classification='315/all',
             period=self._generate_period_string(),
             header='n',
             format='pandas'
         )
 
-    def format_data(self, df:pd.DataFrame) ->pd.DataFrame:
-        df.drop(columns=['MN','NC', 'NN', 'MC','D1C', 'D1N', 'D2N', 'D3C', 'D3N', 'D4C'],inplace=True)
-        df.rename(columns={'V':'value', 'D2C': 'date', 'D4N': 'item'}, inplace= True)
-        df['date'] = pd.to_datetime(df['date'],format='%Y%m')
-        df['item_code'] = df['item'].apply(lambda x: str(x).split('.')[0] if len(str(x).split('.')) > 1 else 0 ) 
+    def format_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        logger.info(f' [+] Executing {self.__class__.__name__}.format_data with DataFrame shape {df.shape}')
+        df.drop(columns=['MN', 'NC', 'NN', 'MC', 'D1C', 'D1N', 'D2N', 'D3C', 'D3N', 'D4C'], inplace=True)
+        df.rename(columns={'V': 'value', 'D2C': 'date', 'D4N': 'item'}, inplace=True)
+        df['date'] = pd.to_datetime(df['date'], format='%Y%m')
+        df['item_code'] = df['item'].apply(lambda x: str(x).split('.')[0] if len(str(x).split('.')) > 1 else 0)
         df['item_desc'] = df['item'].apply(lambda x: unidecode(str(x).split('.')[1].lower()) if len(str(x).split('.')) > 1 else unidecode(str(x).lower()))
-        df.drop(columns='item',inplace=True)
+        df.drop(columns='item', inplace=True)
         return df
 
-    def merge_formatted_data(self, variation: pd.DataFrame, weight: pd.DataFrame) ->pd.DataFrame:
+    def merge_formatted_data(self, variation: pd.DataFrame, weight: pd.DataFrame) -> pd.DataFrame:
+        logger.info(f' [+] Executing {self.__class__.__name__}.merge_formatted_data with DataFrames variation shape {variation.shape} and weight shape {weight.shape}')
         variation.rename(columns={'value': 'item_variation'}, inplace=True)
         weight.rename(columns={'value': 'item_weight'}, inplace=True)
-        df = pd.merge(variation, weight, how='inner',on=['date','item_code','item_desc'])
-        return df[['date','item_code', 'item_desc','item_variation','item_weight']]
+        df = pd.merge(variation, weight, how='inner', on=['date', 'item_code', 'item_desc'])
+        return df[['date', 'item_code', 'item_desc', 'item_variation', 'item_weight']]
 
-    def set_variation_and_weight(self, index_name: str) ->pd.DataFrame:
-        variacao = self.format_data(self.get_data(index_name,'VARIAÇÃO MENSAL'))
-        peso = self.format_data(self.get_data(index_name,'PESO MENSAL'))
-        df = self.merge_formatted_data(variacao,peso)
+    def set_variation_and_weight(self, index_name: str) -> pd.DataFrame:
+        logger.info(f' [+] Executing {self.__class__.__name__}.set_variation_and_weight with parameter: index_name={index_name}')
+        variacao = self.format_data(self.get_data(index_name, 'VARIAÇÃO MENSAL'))
+        peso = self.format_data(self.get_data(index_name, 'PESO MENSAL'))
+        df = self.merge_formatted_data(variacao, peso)
         df['index_name'] = index_name
         return df
-    
+
     def set_granular_data(self) -> None:
+        logger.info(f' [+] Executing {self.__class__.__name__}.set_granular_data with no parameters')
         ipca = self.set_variation_and_weight('IPCA')
         ipca_15 = self.set_variation_and_weight('IPCA-15')
-        self.granular_data = pd.concat([ipca,ipca_15],ignore_index=True, axis=0)
+        self.granular_data = pd.concat([ipca, ipca_15], ignore_index=True, axis=0)
         self.granular_data = self.granular_data.groupby(['date', 'index_name']).apply(lambda x: x.drop_duplicates(subset='item_desc')).reset_index(drop=True)
-        self.granular_data.to_csv('raw_ibge.csv',index=False)
-        self.granular_data = pd.read_csv('raw_ibge.csv') #this is the funniest bug i have ever seen
+        self.granular_data.to_csv('raw_ibge.csv', index=False)
+        self.granular_data = pd.read_csv('raw_ibge.csv')  # this is the funniest bug i have ever seen
 
-    def _aux_calculate_filtered_df(self, composition_name:str) ->pd.DataFrame:
+    def _aux_calculate_filtered_df(self, composition_name: str) -> pd.DataFrame:
+        logger.info(f' [+] Executing {self.__class__.__name__}._aux_calculate_filtered_df with parameter: composition_name={composition_name}')
         current_composition = []
         for composition_item_name, composition_item_factor in self.COMPOSITIONS_BCB[composition_name].items():
             filtered_df = self.data[self.data.item_desc == composition_item_name].copy()
             filtered_df.item_variation *= composition_item_factor
             filtered_df.item_weight *= composition_item_factor
             current_composition.append(filtered_df)
-        return pd.concat(
-                    current_composition,
-                    ignore_index=True,
-                    axis=0
-                )
+        return pd.concat(current_composition, ignore_index=True, axis=0)
 
     def calculate_bcb_compositions(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.calculate_bcb_compositions with no parameters')
         self.data = self.granular_data.copy()
         for composition_name in self.COMPOSITIONS_BCB.keys():
             df = self._aux_calculate_filtered_df(composition_name)
-            df = df.groupby(
-                        [
-                            'date',
-                            'index_name'
-                        ]
-                    ).agg(
-                            {
-                                'item_variation': 'sum',
-                                'item_weight': 'sum'
-                            }
-                        ).reset_index()
+            df = df.groupby(['date', 'index_name']).agg({'item_variation': 'sum', 'item_weight': 'sum'}).reset_index()
             df['item_desc'] = composition_name
             df['item_code'] = composition_name
-            self.data = pd.concat(
-                [
-                    self.data, 
-                    df
-                ],
-                ignore_index = True,
-                axis = 0
-            )
-        self.data.to_csv('ibge.csv',index=False)
+            self.data = pd.concat([self.data, df], ignore_index=True, axis=0)
+        self.data.to_csv('ibge.csv', index=False)
 
     def set_data(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.set_data with no parameters')
         self.set_granular_data()
         self.calculate_bcb_compositions()
 
