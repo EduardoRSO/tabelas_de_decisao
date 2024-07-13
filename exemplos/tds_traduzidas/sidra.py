@@ -376,15 +376,15 @@ class handlerIBGE():
         self.set_granular_data()
         self.calculate_bcb_compositions()
 
-class HandlerDatabase():
-
+class HandlerDatabase:
     def __init__(self):
-        self._secrets = json.load(open('sidra_notion_secrets.json','r'))
+        logger.info(f' [+] Executing {self.__class__.__name__}.__init__ with no parameters')
+        self._secrets = json.load(open('sidra_notion_secrets.json', 'r'))
         self._notion_client = NotionClient(auth=self._secrets['api_secret'])
         self._database_columns = {
             'index_register': ['id_index', 'index_name'],
             'group_register': ['id_group', 'id_parentGroup', 'group_name', 'group_desc'],
-            'composition_register': ['id_group','id_child','factor'],
+            'composition_register': ['id_group', 'id_child', 'factor'],
             'index_history': ['id_index', 'id_group', 'date', 'item_value', 'item_weight']
         }
         self._database_column_type = {
@@ -396,47 +396,50 @@ class HandlerDatabase():
             'group_desc': 'text',
             'id_child': 'number',
             'factor': 'number',
-            'date' : 'text',
-            'item_value' : 'number',
-            'item_weight' : 'text'
+            'date': 'text',
+            'item_value': 'number',
+            'item_weight': 'text'
         }
         self._database_map_json_path = {
-            'number' : 'number',
+            'number': 'number',
             'text': 'rich_text.0.text.content'
         }
 
-
-    def has_connection(self) ->bool:
+    def has_connection(self) -> bool:
+        logger.info(f' [+] Executing {self.__class__.__name__}.has_connection with no parameters')
         try:
             for secret_name, database_id in self._secrets.items():
                 if secret_name != 'api_secret':
                     self._notion_client.databases.retrieve(database_id)
             return True
         except Exception as e:
-            print(e)
+            logger.error(f' [+] Error in {self.__class__.__name__}.has_connection: {e}')
             return False
 
-    def _set_all_databases(self) ->None:
-        self.index_register = self.set_database('index_register') 
+    def _set_all_databases(self) -> None:
+        logger.info(f' [+] Executing {self.__class__.__name__}._set_all_databases with no parameters')
+        self.index_register = self.set_database('index_register')
         self.group_register = self.set_database('group_register')
         self.composition_register = self.set_database('composition_register')
         self.index_history = self.set_database('index_history')
 
-    def set_database(self, database_name:str) ->pd.DataFrame:
+    def set_database(self, database_name: str) -> pd.DataFrame:
+        logger.info(f' [+] Executing {self.__class__.__name__}.set_database with parameters: database_name={database_name}')
         database = self._notion_client.databases.query(self._secrets[database_name])
         table = []
         for row in database['results']:
             column_values = {}
             for column in self._database_columns[database_name]:
-                column_values[column] = self._safe_get(row, f'properties.{column}.{self._database_map_json_path[self._database_column_type[column]]}') 
+                column_values[column] = self._safe_get(row, f'properties.{column}.{self._database_map_json_path[self._database_column_type[column]]}')
             table.append(column_values)
-        return pd.DataFrame(table) 
-        
-    def insert(self,database_name:str, df:pd.DataFrame) ->None:
+        return pd.DataFrame(table)
+
+    def insert(self, database_name: str, df: pd.DataFrame) -> None:
+        logger.info(f' [+] Executing {self.__class__.__name__}.insert with parameters: database_name={database_name}, df=DataFrame with shape {df.shape}')
         for _, row in df.iterrows():
             properties = {}
             for column in self._database_columns[database_name]:
-                properties[column] = self._safe_set(self._database_map_json_path[self._database_column_type[column]],row[column])
+                properties[column] = self._safe_set(self._database_map_json_path[self._database_column_type[column]], row[column])
             self._notion_client.pages.create(
                 **{
                     "parent": {
@@ -446,7 +449,8 @@ class HandlerDatabase():
                 }
             )
 
-    def _safe_get(self, data:dict, dot_chained_keys:str):
+    def _safe_get(self, data: dict, dot_chained_keys: str):
+        logger.info(f' [+] Executing {self.__class__.__name__}._safe_get with parameters: data=dict, dot_chained_keys={dot_chained_keys}')
         keys = dot_chained_keys.split('.')
         for key in keys:
             try:
@@ -457,8 +461,9 @@ class HandlerDatabase():
             except (KeyError, TypeError, IndexError):
                 return None
         return data
-    
-    def _safe_set(self, dot_chained_keys:str, value):
+
+    def _safe_set(self, dot_chained_keys: str, value):
+        logger.info(f' [+] Executing {self.__class__.__name__}._safe_set with parameters: dot_chained_keys={dot_chained_keys}, value={value}')
         keys = dot_chained_keys.split('.')
         obj = value
         for key in keys[::-1]:
@@ -467,9 +472,10 @@ class HandlerDatabase():
             else:
                 obj = {key: obj}
         return obj
-    
+
     def increase_reconnection_tries(self):
-        self.reconnection_tries +=1
+        logger.info(f' [+] Executing {self.__class__.__name__}.increase_reconnection_tries with no parameters')
+        self.reconnection_tries += 1
 
 class HandlerUpdater():
     def __init__(self):
