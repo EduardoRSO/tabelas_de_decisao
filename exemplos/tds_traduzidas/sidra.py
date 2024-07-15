@@ -1,11 +1,13 @@
 import json
 import logging
+import numpy as np
 import pandas as pd
 import sidrapy as IBGE
 from time import sleep
 from datetime import datetime
 from unidecode import unidecode
 from notion_client import Client as NotionClient
+from notion_client.helpers import is_full_database, collect_paginated_api
 
 # Set up the logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -207,7 +209,7 @@ class handlerIBGE():
                 "tuberculos, raizes e legumes": 1,
                 "hortalicas e verduras": 1,
                 "pescados":1,
-                "salmao": -1,
+                "peixe - salmao": -1,
                 "leites e derivados":1,
                 "leite em po": -1,
                 "pao frances": 1,
@@ -392,12 +394,20 @@ class HandlerDatabase:
             'number': 'number',
             'text': 'rich_text.0.text.content'
         }
+        self._request_counter = 0
+
+
+    def _check_request_limit(self):
+        self._request_counter+=1
+        if self._request_counter % 3 == 0:
+            sleep(1)
 
     def has_connection(self) -> bool:
         logger.info(f' [+] Executing {self.__class__.__name__}.has_connection with no parameters')
         try:
             for secret_name, database_id in self._secrets.items():
                 if secret_name != 'api_secret':
+                    self._check_request_limit()
                     self._notion_client.databases.retrieve(database_id)
             return True
         except Exception as e:
@@ -413,9 +423,10 @@ class HandlerDatabase:
 
     def set_database(self, database_name: str) -> pd.DataFrame:
         logger.info(f' [+] Executing {self.__class__.__name__}.set_database with parameters: database_name={database_name}')
-        database = self._notion_client.databases.query(self._secrets[database_name])
+        self._check_request_limit()
+        database = collect_paginated_api(self._notion_client.databases.query, database_id=self._secrets[database_name])
         table = []
-        for row in database['results']:
+        for row in database:
             column_values = {}
             for column in self._database_columns[database_name]:
                 column_values[column] = self._safe_get(row, f'properties.{column}.{self._database_map_json_path[self._database_column_type[column]]}')
@@ -428,6 +439,8 @@ class HandlerDatabase:
             properties = {}
             for column in self._database_columns[database_name]:
                 properties[column] = self._safe_set(self._database_map_json_path[self._database_column_type[column]], row[column])
+            logger.info(f' [+] Inserted row on database_name={database_name}, df=DataFrame with shape {df.shape}, row = {row.to_dict()}, properties = {properties}')
+            self._check_request_limit()
             self._notion_client.pages.create(
                 **{
                     "parent": {
@@ -435,8 +448,8 @@ class HandlerDatabase:
                     },
                     "properties": properties
                 }
-            )
-
+            )   
+        
     def _safe_get(self, data: dict, dot_chained_keys: str):
         logger.info(f' [+] Executing {self.__class__.__name__}._safe_get with parameters: data=dict, dot_chained_keys={dot_chained_keys}')
         keys = dot_chained_keys.split('.')
@@ -453,7 +466,7 @@ class HandlerDatabase:
     def _safe_set(self, dot_chained_keys: str, value):
         logger.info(f' [+] Executing {self.__class__.__name__}._safe_set with parameters: dot_chained_keys={dot_chained_keys}, value={value}')
         keys = dot_chained_keys.split('.')
-        obj = value
+        obj = int(value) if isinstance(value, np.integer) else value
         for key in keys[::-1]:
             if key.isdigit():
                 obj = [obj]
@@ -469,50 +482,81 @@ class HandlerUpdater():
     def __init__(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.__init__ with no parameters')
         self.ibge = handlerIBGE()
-        self.ibge.data = pd.read_csv('raw_ibge.csv')
+        self.ibge.data = pd.read_csv('ibge.csv')
+        self.ibge.data.date = pd.to_datetime(self.ibge.data.date, format='%Y-%m-%d') 
         self.database = HandlerDatabase()
+        self._create_id_mapping_itemCode()
+        self._create_id_mapping_indexName()
 
     def index_register_is_valid(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.index_register_is_valid with no parameters')
+        logger.info(f'      [+] Executing {len(self.ibge.data.index_name.unique())} e {len(self.database.index_register)}')
         return len(self.ibge.data.index_name.unique()) == len(self.database.index_register)
     
     def group_register_is_valid(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.group_register_is_valid with no parameters')
+        logger.info(f'      [+] Executing {len(self.ibge.data.item_desc.unique())} e {len(self.database.group_register)}')
         return len(self.ibge.data.item_desc.unique()) == len(self.database.group_register)
 
     def composition_register_is_valid(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.composition_register_is_valid with no parameters')
+        logger.info(f'      [+] Executing {self._count_items(self.ibge.COMPOSITIONS_BCB)} e {len(self.database.composition_register)}')
         return self._count_items(self.ibge.COMPOSITIONS_BCB) == len(self.database.composition_register)
 
     def index_history_is_valid(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.index_history_is_valid with no parameters')
-        return len(self.ibge.data) == len(self.database.index_history)
+        logger.info(f'      [+] Executing {len(self.ibge.data[self.ibge.data.item_code.isin(list(self.ibge.COMPOSITIONS_BCB.keys())+[0])])} e {len(self.database.index_history)}')
+        return len(self.ibge.data[self.ibge.data.item_code.isin(list(self.ibge.COMPOSITIONS_BCB.keys())+[0])]) == len(self.database.index_history)
 
     def repair_index_register(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.repair_index_register with no parameters')
-        #insert all on index_register
-        pass
-    
+        self.template_index_register = pd.DataFrame(columns=['id_index', 'index_name'])
+        for index_name in self.ibge.data.index_name.unique():
+            self.template_index_register.loc[len(self.template_index_register)] = {'id_index': self.id_mapping_index_register[index_name] , 'index_name': index_name}
+        self.database.insert('index_register', self.template_index_register)
+
     def repair_group_register(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.repair_group_register with no parameters')
-        #insert all on group_register
-        pass
+        self.template_group_register = pd.DataFrame(columns=['id_group', 'id_parentGroup', 'group_name', 'group_desc'])
+        for _, row in self.ibge.data[(self.ibge.data.date == self.ibge.data.date.max()) & (self.ibge.data.index_name == 'IPCA')].iterrows():
+            self.template_group_register.loc[len(self.template_group_register)] = {
+                'id_group': self.id_mapping_group_register[str(row['item_code'])],
+                'id_parentGroup': self._get_parentGroup(row['item_code']),
+                'group_name': str(row['item_code']),
+                'group_desc': str(row['item_desc'])
+            }
+        self.database.insert('group_register', self.template_group_register)
 
     def repair_composition_register(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.repair_composition_register with no parameters')
-        #insert all on composition_register
-        pass
-
+        self.template_composition_register = pd.DataFrame(columns = ['id_group', 'id_child', 'factor'],dtype=int)
+        for composition_name in self.ibge.COMPOSITIONS_BCB.keys():
+            for composition_item, composition_factor in self.ibge.COMPOSITIONS_BCB[composition_name].items():
+                self.template_composition_register.loc[len(self.template_composition_register)] = {
+                    'id_group': self.id_mapping_group_register[composition_name],
+                    'id_child': self.id_mapping_group_register[self._get_itemCode_by_itemDesc(composition_item)],
+                    'factor': composition_factor
+                }
+        self.database.insert('composition_register', self.template_composition_register)
+        
     def repair_index_history(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.repair_index_history with no parameters')
-        #insert all on index_history
-        pass
-
+        self.template_index_history = pd.DataFrame(columns=['id_index','id_group','date','item_value','item_weight'])
+        filtered_ipca_item_history = self.ibge.data[self.ibge.data.item_code.isin(list(self.ibge.COMPOSITIONS_BCB.keys())+[0])]
+        for _, row in filtered_ipca_item_history.iterrows():
+            self.template_index_history.loc[len(self.template_index_history)] = {
+                'id_index' : self.id_mapping_index_register[row['index_name']],
+                'id_group' : self.id_mapping_group_register[row['item_code']],
+                'date': row['date'].strftime('%Y-%m-%d'),
+                'item_value': row['item_variation'],
+                'item_weight': row['item_weight']
+            }
+        self.database.insert('index_history', self.template_index_history)
+        
     def update_core(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.update_core with no parameters')
         if self.database.has_connection():
             self.database._set_all_databases()
-            #self.ibge.set_data()
             if not self.index_register_is_valid():
                 self.repair_index_register()
             if not self.group_register_is_valid():
@@ -529,7 +573,7 @@ class HandlerUpdater():
             self.update_core()
 
     def _count_items(self, d):
-        logger.info(f' [+] Executing {self.__class__.__name__}._count_items with parameters: {d}')
+        logger.info(f' [+] Executing {self.__class__.__name__}._count_items with len(parameters): {len(d)}')
         count = 0
         for key, value in d.items():
             if isinstance(value, dict):
@@ -538,28 +582,45 @@ class HandlerUpdater():
                 count += 1 
         return count
     
+    def _create_id_mapping_indexName(self) ->None:
+        self.id_mapping_index_register = {
+            'IPCA':1,
+            'IPCA-15':2
+        }
+    def _create_id_mapping_itemCode(self) ->None:
+        logger.info(f' [+] Executing {self.__class__.__name__}._create_id_mapping with no parameters')
+        self.id_mapping_group_register = {}
+        for _, row in self.ibge.data[self.ibge.data.date == self.ibge.data.date.max()].iterrows():
+            self.id_mapping_group_register[str(row['item_code'])] = self.id_mapping_group_register.get(str(row['item_code']),len(self.id_mapping_group_register)+1)
+
+    def _get_parentGroup(self, item_code):
+        logger.info(f' [+] Executing {self.__class__.__name__}._get_parentGroup with no parameters = {item_code}')
+        item_code = str(item_code)
+        if item_code.isdigit():
+            if len(item_code) == 1:
+                return self.id_mapping_group_register['0']
+            elif len(item_code) == 2:
+                return self.id_mapping_group_register[item_code[0]]
+            elif len(item_code) == 4:
+                if self.id_mapping_group_register.get(item_code[0:2]) == None:
+                    return self._get_parentGroup(item_code[0:2])
+                return self.id_mapping_group_register[item_code[0:2]]
+            elif len(item_code) == 7:
+                if self.id_mapping_group_register.get(item_code[0:4]) == None:
+                    return self._get_parentGroup(item_code[0:4])
+                return self.id_mapping_group_register[item_code[0:4]]
+        return self.id_mapping_group_register['0']
+    
+    def _get_itemCode_by_itemDesc(self, item_desc) ->str:
+        logger.info(f' [+] Executing {self.__class__.__name__}._get_itemCode_by_itemDesc with no parameters = {item_desc}')
+        return self.ibge.data[self.ibge.data.item_desc == item_desc]['item_code'].iloc[0]        
+
 up = HandlerUpdater()
 up.update_core()
 
-# se o db tem conexão
-#   puxa os dados do ibge
-#   se index_register invalido
-#       atualiza index_register
-#   se index_history invalido
-#       atualiza index_history
-#   se group_register invalido
-#       atualiza group_register
-#   se composition_regiser
-#       atualiza composition_register
-# senao
-#   tenta novamente          
-
-# acho que o dbHandler deve ter apenas essas poucas funções, o resto pode ficar no Handler Updater
-# para deixar a tabela de decisao desse updater mais robusta, posso fazer com que ele cheque todas as datas em todas as execuções
-# buscando por lacunas nas datas, por exemplo do index history
-# buscando pela ausencia de grupos e aberturas em group_register
-# buscando pela ausencia de itens em composition_register
-# buscando pela ausencia de indices em index_register
+# basta descobrir como deletar tudo e inserir novamente
+# caso não exista uma forma fácil de deletar, então basta considerar que em toda execução é necessário reconfigurar a pagina do notion e coletar os ids
+# para facilitar, posso desconsiderar as colunas de ids, mas acredito que ficaria tão trivial que seria melhor omitir o resto
 
 # depois que o hanlder updater assegurar que que tudo está válido, então partimos para a analise
 # vou replicar o dashboard:
