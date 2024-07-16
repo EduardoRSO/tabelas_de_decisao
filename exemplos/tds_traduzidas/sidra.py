@@ -388,7 +388,7 @@ class HandlerDatabase:
             'factor': 'number',
             'date': 'text',
             'item_value': 'number',
-            'item_weight': 'text'
+            'item_weight': 'number'
         }
         self._database_map_json_path = {
             'number': 'number',
@@ -400,7 +400,7 @@ class HandlerDatabase:
     def _check_request_limit(self):
         self._request_counter+=1
         if self._request_counter % 3 == 0:
-            sleep(1)
+            sleep(2)
 
     def has_connection(self) -> bool:
         logger.info(f' [+] Executing {self.__class__.__name__}.has_connection with no parameters')
@@ -420,6 +420,12 @@ class HandlerDatabase:
         self.group_register = self.set_database('group_register')
         self.composition_register = self.set_database('composition_register')
         self.index_history = self.set_database('index_history')
+        self._name_to_db = {
+            'index_register': self.index_register,
+            'group_register': self.group_register,
+            'composition_register': self.composition_register,
+            'index_history': self.index_history
+        }
 
     def set_database(self, database_name: str) -> pd.DataFrame:
         logger.info(f' [+] Executing {self.__class__.__name__}.set_database with parameters: database_name={database_name}')
@@ -431,10 +437,11 @@ class HandlerDatabase:
             for column in self._database_columns[database_name]:
                 column_values[column] = self._safe_get(row, f'properties.{column}.{self._database_map_json_path[self._database_column_type[column]]}')
             table.append(column_values)
-        return pd.DataFrame(table)
+        return pd.DataFrame(table).drop_duplicates()
 
     def insert(self, database_name: str, df: pd.DataFrame) -> None:
         logger.info(f' [+] Executing {self.__class__.__name__}.insert with parameters: database_name={database_name}, df=DataFrame with shape {df.shape}')
+        df = self._get_unique_rows(database_name, df, self._name_to_db[database_name])
         for _, row in df.iterrows():
             properties = {}
             for column in self._database_columns[database_name]:
@@ -449,6 +456,10 @@ class HandlerDatabase:
                     "properties": properties
                 }
             )   
+    
+    def increase_reconnection_tries(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.increase_reconnection_tries with no parameters')
+        self.reconnection_tries += 1
         
     def _safe_get(self, data: dict, dot_chained_keys: str):
         logger.info(f' [+] Executing {self.__class__.__name__}._safe_get with parameters: data=dict, dot_chained_keys={dot_chained_keys}')
@@ -473,15 +484,18 @@ class HandlerDatabase:
             else:
                 obj = {key: obj}
         return obj
-
-    def increase_reconnection_tries(self):
-        logger.info(f' [+] Executing {self.__class__.__name__}.increase_reconnection_tries with no parameters')
-        self.reconnection_tries += 1
+    
+    def _get_unique_rows(self, database_name:str, df1:pd.DataFrame, df2:pd.DataFrame) ->pd.DataFrame:
+        merged_df = df1.merge(df2, on=self._database_columns[database_name], how='left', indicator=True)
+        unique_df1 = merged_df[merged_df['_merge'] == 'left_only'].drop(columns='_merge')
+        logger.info(f' [+] Executed {self.__class__.__name__}.insert with parameters: database_name={database_name}, df=DataFrame with shape{df1.shape}. Returned= {unique_df1.shape}')
+        return unique_df1
 
 class HandlerUpdater():
     def __init__(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.__init__ with no parameters')
         self.ibge = handlerIBGE()
+        self.ibge.set_data()
         self.ibge.data = pd.read_csv('ibge.csv')
         self.ibge.data.date = pd.to_datetime(self.ibge.data.date, format='%Y-%m-%d') 
         self.database = HandlerDatabase()
@@ -491,22 +505,22 @@ class HandlerUpdater():
     def index_register_is_valid(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.index_register_is_valid with no parameters')
         logger.info(f'      [+] Executing {len(self.ibge.data.index_name.unique())} e {len(self.database.index_register)}')
-        return len(self.ibge.data.index_name.unique()) == len(self.database.index_register)
+        return len(self.ibge.data.index_name.unique()) <= len(self.database.index_register)
     
     def group_register_is_valid(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.group_register_is_valid with no parameters')
         logger.info(f'      [+] Executing {len(self.ibge.data.item_desc.unique())} e {len(self.database.group_register)}')
-        return len(self.ibge.data.item_desc.unique()) == len(self.database.group_register)
+        return len(self.ibge.data.item_desc.unique()) <= len(self.database.group_register)
 
     def composition_register_is_valid(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.composition_register_is_valid with no parameters')
         logger.info(f'      [+] Executing {self._count_items(self.ibge.COMPOSITIONS_BCB)} e {len(self.database.composition_register)}')
-        return self._count_items(self.ibge.COMPOSITIONS_BCB) == len(self.database.composition_register)
+        return self._count_items(self.ibge.COMPOSITIONS_BCB) <= len(self.database.composition_register)
 
     def index_history_is_valid(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.index_history_is_valid with no parameters')
         logger.info(f'      [+] Executing {len(self.ibge.data[self.ibge.data.item_code.isin(list(self.ibge.COMPOSITIONS_BCB.keys())+[0])])} e {len(self.database.index_history)}')
-        return len(self.ibge.data[self.ibge.data.item_code.isin(list(self.ibge.COMPOSITIONS_BCB.keys())+[0])]) == len(self.database.index_history)
+        return len(self.ibge.data[self.ibge.data.item_code.isin(list(self.ibge.COMPOSITIONS_BCB.keys())+[0])]) <= len(self.database.index_history)
 
     def repair_index_register(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.repair_index_register with no parameters')
@@ -545,8 +559,8 @@ class HandlerUpdater():
         filtered_ipca_item_history = self.ibge.data[self.ibge.data.item_code.isin(list(self.ibge.COMPOSITIONS_BCB.keys())+[0])]
         for _, row in filtered_ipca_item_history.iterrows():
             self.template_index_history.loc[len(self.template_index_history)] = {
-                'id_index' : self.id_mapping_index_register[row['index_name']],
-                'id_group' : self.id_mapping_group_register[row['item_code']],
+                'id_index' : self.id_mapping_index_register[str(row['index_name'])],
+                'id_group' : self.id_mapping_group_register[str(row['item_code'])],
                 'date': row['date'].strftime('%Y-%m-%d'),
                 'item_value': row['item_variation'],
                 'item_weight': row['item_weight']
@@ -618,13 +632,9 @@ class HandlerUpdater():
 up = HandlerUpdater()
 up.update_core()
 
-# basta descobrir como deletar tudo e inserir novamente
-# caso não exista uma forma fácil de deletar, então basta considerar que em toda execução é necessário reconfigurar a pagina do notion e coletar os ids
-# para facilitar, posso desconsiderar as colunas de ids, mas acredito que ficaria tão trivial que seria melhor omitir o resto
-
 # depois que o hanlder updater assegurar que que tudo está válido, então partimos para a analise
 # vou replicar o dashboard:
-# 12M, Metas BCB, 3M SAAR, 6M SAAR, MoM SAAR
+# 12M, MoM e Contribuições 
 # os gráficos podem ser feitos usando o matplot para facilitar. Não vou me ater a inserir essas séries na base
 
 # assim que conseguir o resultado final, partimos para a replicação usando tabelas de decisão 
