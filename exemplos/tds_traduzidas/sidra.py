@@ -5,6 +5,7 @@ import pandas as pd
 import sidrapy as IBGE
 from time import sleep
 from datetime import datetime
+import matplotlib.pyplot as plt
 from unidecode import unidecode
 from notion_client import Client as NotionClient
 from notion_client.helpers import is_full_database, collect_paginated_api
@@ -13,7 +14,7 @@ from notion_client.helpers import is_full_database, collect_paginated_api
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class handlerIBGE():
+class HandlerIBGE():
     
     def __init__(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.__init__ with no parameters')
@@ -492,16 +493,11 @@ class HandlerDatabase:
         return unique_df1
 
 class HandlerUpdater():
-    def __init__(self):
+    def __init__(self, ibge = None, database = None):
         logger.info(f' [+] Executing {self.__class__.__name__}.__init__ with no parameters')
-        self.ibge = handlerIBGE()
-        self.ibge.set_data()
-        self.ibge.data = pd.read_csv('ibge.csv')
-        self.ibge.data.date = pd.to_datetime(self.ibge.data.date, format='%Y-%m-%d') 
-        self.database = HandlerDatabase()
-        self._create_id_mapping_itemCode()
-        self._create_id_mapping_indexName()
-
+        self.ibge = HandlerIBGE() if ibge == None else ibge
+        self.database = HandlerDatabase() if database == None else database 
+        
     def index_register_is_valid(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.index_register_is_valid with no parameters')
         logger.info(f'      [+] Executing {len(self.ibge.data.index_name.unique())} e {len(self.database.index_register)}')
@@ -569,6 +565,12 @@ class HandlerUpdater():
         
     def update_core(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.update_core with no parameters')
+        #self.ibge.set_data()
+        self.ibge.data = pd.read_csv('ibge.csv')
+        self.ibge.data.date = pd.to_datetime(self.ibge.data.date, format='%Y-%m-%d') 
+        self._create_id_mapping_itemCode()
+        self._create_id_mapping_indexName()
+
         if self.database.has_connection():
             self.database._set_all_databases()
             if not self.index_register_is_valid():
@@ -629,16 +631,85 @@ class HandlerUpdater():
         logger.info(f' [+] Executing {self.__class__.__name__}._get_itemCode_by_itemDesc with no parameters = {item_desc}')
         return self.ibge.data[self.ibge.data.item_desc == item_desc]['item_code'].iloc[0]        
 
-up = HandlerUpdater()
-up.update_core()
+class HandlerAnalysis:
+    def __init__(self, database = None):
+        self.database = HandlerDatabase() if database == None else database
 
-# depois que o hanlder updater assegurar que que tudo está válido, então partimos para a analise
-# vou replicar o dashboard:
-# 12M, MoM e Contribuições 
-# os gráficos podem ser feitos usando o matplot para facilitar. Não vou me ater a inserir essas séries na base
+    def contribution_graph(self, list_of_ids):
+        # Filter data for the given list of IDs
+        filtered_data = self.data[self.data['id_group'].isin(list_of_ids)]
+        
+        # Calculate contribution
+        filtered_data['contribution'] = filtered_data['item_value'] * filtered_data['item_weight']
+        
+        # Pivot data for stacked bar plot
+        pivot_data = filtered_data.pivot_table(
+            index='date', 
+            columns='id_group', 
+            values='contribution', 
+            aggfunc='sum'
+        )
+        
+        # Plot stacked bar graph
+        pivot_data.plot(kind='bar', stacked=True)
+        plt.title('Contribution by Date')
+        plt.xlabel('Date')
+        plt.ylabel('Contribution')
+        plt.legend(title='ID Group')
+        plt.show()
 
-# assim que conseguir o resultado final, partimos para a replicação usando tabelas de decisão 
-# usamos esse projeto como teste do code_inserter e code_generator
-# teremos feito um exemplo bem robusto de aplicação de tabelas de decisão
-# os outros exemplos podem ser mais bobinhos, então aí entra as trilhas do bcc fazendo chamadas recursivas de TDS
-# e o primeiro exemplo pode ser o mais trivial, o teste de salário do Satoshi como referência
+    def variation_graph(self, id):
+        # Filter data for the given ID
+        filtered_data = self.data[self.data['id_group'] == id]
+        
+        # Plot bar graph for item_value
+        fig, ax1 = plt.subplots()
+        ax1.bar(filtered_data['date'], filtered_data['item_value'], color='lightgray', label='Item Value')
+        ax1.set_xlabel('Date')
+        ax1.set_ylabel('Item Value')
+        ax1.legend(loc='upper left')
+        
+        # Calculate year-over-year (YoY) variation
+        filtered_data['yoy'] = filtered_data['item_value'].pct_change(12) * 100
+        
+        # Plot line graph for YoY variation
+        ax2 = ax1.twinx()
+        ax2.plot(filtered_data['date'], filtered_data['yoy'], color='blue', label='YoY Variation')
+        ax2.set_ylabel('YoY Variation (%)')
+        ax2.legend(loc='upper right')
+        
+        plt.title('Item Value and YoY Variation')
+        plt.show()
+
+    def visualization_core(self):
+        self.database._set_all_databases()
+        self.data = self.database.index_history 
+
+if __name__ == '__main__':
+    print(f'> SIDRA.py is a program connected to a Notion database that can plot graphs of data collected from the IPCA (Índice Nacional de Preços ao Consumidor Amplo) by IBGE.\n'
+          f'  It is recommended to update the database before performing any analysis.')
+    ibge = HandlerIBGE()
+    database = HandlerDatabase()
+    upater = HandlerUpdater(ibge,database)
+    analysis = HandlerAnalysis(database)
+    while True:
+        option = input('> Please choose an option:\n'
+                       '  1 - Update the database\n'
+                       '  2 - Perform data analysis and plot graphs\n'
+                       '  3 - Quit the program\n> ')
+        
+        if option == "1":
+            print('> Updating the database...')
+            up = HandlerUpdater()
+            up.update_core()
+            print('> Database update completed successfully.')
+        elif option == "2":
+            print('> Initializing data analysis and visualization...')
+            an = HandlerAnalysis()
+            an.visualization_core()
+            print('> Data analysis and visualization completed successfully.')
+        elif option == "3":
+            print('> Exiting the program. Goodbye!')
+            exit()
+        else:
+            print(f' [-] Error: Unrecognized option "{option}". Please enter a valid option (1, 2, or 3).')
