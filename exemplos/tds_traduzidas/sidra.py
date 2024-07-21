@@ -6,6 +6,7 @@ import sidrapy as IBGE
 from time import sleep
 from datetime import datetime
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from unidecode import unidecode
 from notion_client import Client as NotionClient
 from notion_client.helpers import is_full_database, collect_paginated_api
@@ -396,6 +397,7 @@ class HandlerDatabase:
             'text': 'rich_text.0.text.content'
         }
         self._request_counter = 0
+        self.loaded_databases = False
 
 
     def _check_request_limit(self):
@@ -427,6 +429,7 @@ class HandlerDatabase:
             'composition_register': self.composition_register,
             'index_history': self.index_history
         }
+        self.loaded_databases = True
 
     def set_database(self, database_name: str) -> pd.DataFrame:
         logger.info(f' [+] Executing {self.__class__.__name__}.set_database with parameters: database_name={database_name}')
@@ -456,7 +459,8 @@ class HandlerDatabase:
                     },
                     "properties": properties
                 }
-            )   
+            ) 
+        self.loaded_databases = False  
     
     def increase_reconnection_tries(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.increase_reconnection_tries with no parameters')
@@ -565,14 +569,14 @@ class HandlerUpdater():
         
     def update_core(self):
         logger.info(f' [+] Executing {self.__class__.__name__}.update_core with no parameters')
-        #self.ibge.set_data()
-        self.ibge.data = pd.read_csv('ibge.csv')
+        self.ibge.set_data()
         self.ibge.data.date = pd.to_datetime(self.ibge.data.date, format='%Y-%m-%d') 
         self._create_id_mapping_itemCode()
         self._create_id_mapping_indexName()
 
         if self.database.has_connection():
-            self.database._set_all_databases()
+            if not self.database.loaded_databases:
+                self.database._set_all_databases()
             if not self.index_register_is_valid():
                 self.repair_index_register()
             if not self.group_register_is_valid():
@@ -632,65 +636,141 @@ class HandlerUpdater():
         return self.ibge.data[self.ibge.data.item_desc == item_desc]['item_code'].iloc[0]        
 
 class HandlerAnalysis:
-    def __init__(self, database = None):
-        self.database = HandlerDatabase() if database == None else database
+    def __init__(self, database=None):
+        self.database = HandlerDatabase() if database is None else database
+        self.choosed_options = []
 
-    def contribution_graph(self, list_of_ids):
-        # Filter data for the given list of IDs
-        filtered_data = self.data[self.data['id_group'].isin(list_of_ids)]
-        
-        # Calculate contribution
-        filtered_data['contribution'] = filtered_data['item_value'] * filtered_data['item_weight']
-        
-        # Pivot data for stacked bar plot
-        pivot_data = filtered_data.pivot_table(
-            index='date', 
-            columns='id_group', 
-            values='contribution', 
-            aggfunc='sum'
-        )
-        
-        # Plot stacked bar graph
-        pivot_data.plot(kind='bar', stacked=True)
-        plt.title('Contribution by Date')
-        plt.xlabel('Date')
-        plt.ylabel('Contribution')
-        plt.legend(title='ID Group')
-        plt.show()
+    def contribution_graph(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.contribution_graph with no parameters')
+        for index_name in self.analysis_df.index_name.unique():
+            logger.info(f'      [+] Generating contribution graph for index_name={index_name}')
+            filtered_data = self.analysis_df[
+                (self.analysis_df['id_group'].isin(self.choosed_options)) &
+                (self.analysis_df['index_name'] == index_name)
+            ].copy()
 
-    def variation_graph(self, id):
-        # Filter data for the given ID
-        filtered_data = self.data[self.data['id_group'] == id]
-        
-        # Plot bar graph for item_value
-        fig, ax1 = plt.subplots()
-        ax1.bar(filtered_data['date'], filtered_data['item_value'], color='lightgray', label='Item Value')
-        ax1.set_xlabel('Date')
-        ax1.set_ylabel('Item Value')
-        ax1.legend(loc='upper left')
-        
-        # Calculate year-over-year (YoY) variation
-        filtered_data['yoy'] = filtered_data['item_value'].pct_change(12) * 100
-        
-        # Plot line graph for YoY variation
-        ax2 = ax1.twinx()
-        ax2.plot(filtered_data['date'], filtered_data['yoy'], color='blue', label='YoY Variation')
-        ax2.set_ylabel('YoY Variation (%)')
-        ax2.legend(loc='upper right')
-        
-        plt.title('Item Value and YoY Variation')
-        plt.show()
+            filtered_data['contribution'] = filtered_data['item_value']/100 * filtered_data['item_weight']
+            filtered_data['x_axis'] = filtered_data.index.strftime('%y-%b')
+            pivot_data = filtered_data.pivot_table(
+                index='x_axis', 
+                columns='group_desc', 
+                values='contribution', 
+                aggfunc='sum'
+            )
+            ax = pivot_data.plot(kind='bar', stacked=True, figsize=(12, 8))
+            ax.set_title(f'Contribution by Date ({index_name})')
+            ax.set_xlabel('Date')
+            ax.set_ylabel('Contribution')
+            ax.legend(title='Items selected')
+
+            plt.xticks(rotation=90)
+
+            filename = f'{index_name}_contribution_graph.png'
+            plt.savefig(filename)
+            logger.info(f"      [+] Graph saved as '{filename}'")
+            plt.clf()
+
+    def variation_graph(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.variation_graph with no parameters')
+        for index_name in self.analysis_df.index_name.unique():
+            for id in self.choosed_options:
+                logger.info(f'      [+] Generating variation graph for id={id}')
+                filtered_data = self.analysis_df[
+                    (self.analysis_df['id_group'] == id) &
+                    (self.analysis_df['index_name'] == index_name)
+                ].copy()
+                filtered_data['date'] = pd.to_datetime(filtered_data.index)
+                filtered_data['yoy'] = (filtered_data['item_value'] / 100 + 1).rolling(window=12).apply(lambda x: np.prod(x) - 1) * 100
+                fig, ax1 = plt.subplots(figsize=(12, 8))
+                bars = ax1.bar(filtered_data.index, filtered_data['item_value'], color='lightgray', width=20, label='MoM (%)')
+                ax1.set_xlabel('Date')
+                ax1.set_ylabel('MoM (%)')
+                ax1.legend(loc='upper left')
+                ax1.plot(filtered_data.index, filtered_data['yoy'], color='blue', label='YoY Variation', marker='o', linestyle='-')
+                ax1.set_ylabel('MoM / YoY (%)')
+                ax1.legend(loc='upper right')
+                plt.title(f'MoM and YoY Variation ({index_name} - {filtered_data["group_desc"].iloc[0]})')
+                ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b-%y'))
+                plt.xticks(rotation=90)
+                filename = f'{index_name}_{filtered_data["group_desc"].iloc[0]}_variation_graph.png'
+                plt.savefig(filename)
+                logger.info(f"Graph saved as '{filename}'")
+                plt.clf()
+
+    def set_available_options(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.set_available_options with no parameters')
+        merged_df = pd.merge(self.database.group_register, self.database.index_history, on='id_group', how='inner')
+        unique_options = merged_df[['group_desc', 'id_group']].drop_duplicates().reset_index()
+        self.available_options = []
+        for index, row in unique_options.iterrows():
+            self.available_options.append([chr(index+60), row['group_desc'], str(row['id_group'])])
+        logger.info(f'      [+] Available options set')
+
+    def set_choosed_options(self, ids):
+        logger.info(f' [+] Executing {self.__class__.__name__}.set_choosed_options with ids={ids}')
+        self.choosed_options = []
+        for option in [id.strip() for id in ids.split(',')]:
+            found_option = False
+            for row in self.available_options:
+                if option in row:
+                    self.choosed_options.append(int(row[2]))
+                    found_option = True
+                    break
+            if not found_option:
+                logger.error(f' [+] Error in {self.__class__.__name__}.set_choosed_options. Option {option} not found')
+
+    def set_analysis_df(self):
+        logger.info(f' [+] Executing {self.__class__.__name__}.set_analysis_df with no parameters')
+        self.analysis_df = pd.merge(self.database.index_history, self.database.index_register, on='id_index', how='inner')
+        self.analysis_df = self.analysis_df.merge(self.database.group_register, on='id_group')
+        self.analysis_df.date = pd.to_datetime(self.analysis_df.date, format='%Y-%m-%d')
+        self.analysis_df = self.analysis_df.set_index('date')
+        self.analysis_df = self.analysis_df.sort_index()
+        logger.info(f'      [+] Analysis DataFrame set')
 
     def visualization_core(self):
-        self.database._set_all_databases()
-        self.data = self.database.index_history 
+        logger.info(f' [+] Executing {self.__class__.__name__}.visualization_core with no parameters')
+        if not self.database.loaded_databases:
+            self.database._set_all_databases()
+        #self.database.composition_register = pd.read_csv('composition_register.csv')
+        #self.database.group_register = pd.read_csv('group_register.csv')
+        #self.database.index_register = pd.read_csv('index_register.csv')
+        #self.database.index_history = pd.read_csv('index_history.csv')
+        #self.database.index_history.date = pd.to_datetime(self.database.index_history.date, format='%Y-%m-%d')
+        self.set_available_options()
+        self.set_analysis_df()
+        
+        while True:
+            graph_option = input('> Please choose a graph to plot:\n'
+                                 '  1 - Contribution Graph (stacked bar graph by date)\n'
+                                 '  2 - Variation Graph (line graph with bar graph behind)\n'
+                                 '  3 - Show available options\n'
+                                 '  4 - Exit visualization\n> ')
+            
+            if graph_option == "1":
+                ids = input('> Enter the char id, item name or item id of the items for the contribution graph, separated by commas:\n> ')
+                self.set_choosed_options(ids)
+                self.contribution_graph()
+            elif graph_option == "2":
+                ids = input('> Enter the char id, item name or item id of the item for the variation graph:\n> ')
+                self.set_choosed_options(ids)
+                self.variation_graph() 
+            elif graph_option == "3":
+                print('> Available options:')
+                for option in self.available_options:
+                    print(f'  - {option[0]}: {option[1]}({option[2]})')
+            elif graph_option == "4":
+                print('> Exiting visualization. Returning to main menu.')
+                break
+            else:
+                print(f' [-] Error: Unrecognized option "{graph_option}". Please enter a valid option (1, 2, 3, or 4).')
 
 if __name__ == '__main__':
     print(f'> SIDRA.py is a program connected to a Notion database that can plot graphs of data collected from the IPCA (Índice Nacional de Preços ao Consumidor Amplo) by IBGE.\n'
           f'  It is recommended to update the database before performing any analysis.')
     ibge = HandlerIBGE()
     database = HandlerDatabase()
-    upater = HandlerUpdater(ibge,database)
+    updater = HandlerUpdater(ibge,database)
     analysis = HandlerAnalysis(database)
     while True:
         option = input('> Please choose an option:\n'
@@ -700,13 +780,11 @@ if __name__ == '__main__':
         
         if option == "1":
             print('> Updating the database...')
-            up = HandlerUpdater()
-            up.update_core()
+            updater.update_core()
             print('> Database update completed successfully.')
         elif option == "2":
             print('> Initializing data analysis and visualization...')
-            an = HandlerAnalysis()
-            an.visualization_core()
+            analysis.visualization_core()
             print('> Data analysis and visualization completed successfully.')
         elif option == "3":
             print('> Exiting the program. Goodbye!')
