@@ -3,3 +3,6 @@
 .pdf
 .pyc
 __pycache__/
+
+sidra_notion_secrets.json
+*.png
