@@ -14,7 +14,8 @@ from decision_table.condition import ConditionParser
 from decision_table.action import ActionParser
 
 class DecisionTable:
-    
+
+    IGNORE = '!= None'
     keywords = ['DECISION TABLE','SETS','CONDITIONS','ACTIONS', 'END TABLE']
     _set_parser = SetParser()
     _condition_parser = ConditionParser()
@@ -290,7 +291,8 @@ class DecisionTable:
     #2  Define as traduções padrão para 'Y' e 'N' e adiciona as traduções dos conjuntos
         self._translated_set_by_name = {
             'Y': '== True',
-            'N': '== False'
+            'N': '== False',
+            '-': self.IGNORE
             }
         for td_set_name, td_set_value in self.get_sets():
             self._translated_set_by_name[td_set_name] = td_set_value
