@@ -190,7 +190,7 @@ class CodeGenerator():
                 self.generated_code += f'{entries_by_condition[j]}*'
             self.generated_code += f'1)*I_{i} + '
     #2  Adiciona o fechamento da expressão e o cálculo final
-        self.generated_code += '1\n'
+        self.generated_code += self.generated_code[:-3]+'\n'
     #2]
 
     #1[
@@ -244,7 +244,11 @@ class CodeGenerator():
                         self._generate_if_or_elif_code(td,condicao,c_ij,index,0,'if')
                     else:
                         self._generate_if_or_elif_code(td,condicao,c_ij,index,n_i-1,'elif')
-                    C.add(c_ij) if c_ij != '-' else C.add(['Y','N'])
+                    if c_ij != '-':
+                        C.add(c_ij)
+                    else:
+                        C.add('Y')
+                        C.add('N')
     #2  Gera o cálculo do ID da ação e o código de match
         self._generate_action_id_calculation_code(td)
         self._generate_match_code(td)
