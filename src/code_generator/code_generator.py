@@ -90,8 +90,11 @@ class CodeGenerator():
         produto_de_entradas = 1
     #2  Itera sobre as condições da tabela de decisão
         for condicao in td.get_conditions():
+    #2      Remove o símbolo '-'
+            if '-' in condicao[1]:
+                condicao[1] = condicao[1] +['Y','N']   
     #2      Multiplica o produto de entradas pelo número de entradas únicas da condição
-            produto_de_entradas *= len(set(condicao[1]))
+            produto_de_entradas *= len(set(condicao[1])) 
     #2  Retorna o produto de entradas
         return produto_de_entradas
     #2]
@@ -129,7 +132,11 @@ class CodeGenerator():
     #2 PSEUDOCODIGO DE: _generate_documentation_code
     def _generate_documentation_code(self, td: DecisionTable) ->None:
     #2  Extrai a tabela de decisão e adiciona a documentação gerada ao código
-        self.generated_code = td.get_extracted_decision_table().replace('#TD','#2#TD') + '\n'
+        self.generated_code += f'{self.initial_spacing}#2[\n'
+        decision_table_str = td.get_extracted_decision_table()
+        for linha in decision_table_str.split('\n'):
+            self.generated_code += linha.lstrip().replace('#TD',f'{self.initial_spacing}#2 #TD') + '\n'
+        self.generated_code += f'{self.initial_spacing}#2]\n'
     #2]
 
     #1[
@@ -190,7 +197,7 @@ class CodeGenerator():
                 self.generated_code += f'{entries_by_condition[j]}*'
             self.generated_code += f'1)*I_{i} + '
     #2  Adiciona o fechamento da expressão e o cálculo final
-        self.generated_code += self.generated_code[:-3]+'\n'
+        self.generated_code = self.generated_code[:-3]+'\n'
     #2]
 
     #1[
@@ -228,6 +235,7 @@ class CodeGenerator():
     #2 PSEUDOCODIGO DE: _switch_method
     def _switch_method(self, td: DecisionTable) ->None:
     #2  Gera a documentação e a inicialização do código
+        self.generated_code = ''
         self._generate_documentation_code(td)
         self._generate_initialization_code(td)
     #2  Itera sobre as condições e gera o código if/elif para cada condição
