@@ -9,7 +9,7 @@
 #1 ROTINAS CHAMADAS: set_method, get_method, product_of_entries_by_condition, list_entries_by_condition, _generate_documentation_code, _generate_initialization_code, _generate_if_or_elif_code, _generate_action_id_calculation_code, _generate_match_code, _switch_method, _fatoracoes_sucessivas, _busca_exaustiva, _programacao_dinamica, generate_code
 #1]
 
-from decision_table.decision_table import DecisionTable
+from src.decision_table.decision_table import DecisionTable
 
 class CodeGenerator():
 
@@ -260,8 +260,6 @@ class CodeGenerator():
     #2  Gera o cálculo do ID da ação e o código de match
         self._generate_action_id_calculation_code(td)
         self._generate_match_code(td)
-    #2  Imprime o código gerado
-        print(self.generated_code)
     #2]
 
     #1[
@@ -319,7 +317,8 @@ class CodeGenerator():
     #1]
     #2[
     #2 PSEUDOCODIGO DE: generate_code
-    def generate_code(self, decision_table: DecisionTable) ->None:
+    def generate_code(self, decision_table: DecisionTable) ->str:
     #2  Executa o método definido para gerar o código
         self.method(decision_table)
+        return self.generated_code
     #2]
