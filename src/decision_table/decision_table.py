@@ -9,9 +9,9 @@
 #1 ROTINAS CHAMADAS: SetParser, ConditionParser, ActionParser
 #1]
 
-from decision_table.set import SetParser
-from decision_table.condition import ConditionParser
-from decision_table.action import ActionParser
+from .set import SetParser
+from .condition import ConditionParser
+from .action import ActionParser
 
 class DecisionTable:
 
