@@ -3,59 +3,43 @@ import logging
 import re
 
 class CodeInserter:
-    def __init__(self, file_path:str):
-        self.initial_spacing = ""  
+    def __init__(self, file_path: str, file_name: str):
+        self.set_initial_spacing("")
+        self.set_file_path(file_path)
+        self.set_file_name(file_name)
+        self.set_file_string()
+        self.set_new_file_path()
 
-    def set_initial_spacing(self, lines):
-        """Detect the initial_spacing used in the file."""
-        for line in lines:
-            match = re.match(r"(\s+)", line)
-            if match:
-                self.initial_spacing = match.group(1)
-                break
+    def set_initial_spacing(self, initial_spacing: str):
+        self.initial_spacing = initial_spacing
 
-    def insert(self, file_path, decision_tables, generated_code):
-        if not os.path.isfile(file_path):
-            logging.error(f"The file {file_path} does not exist.")
-            return
+    def set_file_path(self, file_path: str):
+        self.file_path = file_path
 
-        with open(file_path, 'r') as file:
-            lines = file.readlines()
+    def set_file_name(self, file_name: str):
+        self.file_name = file_name
 
-        # Detect indentation
-        self.detect_indentation(lines)
+    def set_file_string(self):
+        with open(self.file_path, 'r') as file:
+            self.file_string = file.readlines()
 
-        # Pattern to identify decision tables
-        decision_table_pattern = re.compile(r"(decision_table_\d+)")
-        
-        new_lines = []
-        generated_code_idx = 0
+    def set_new_file_path(self):
+        self.new_file_path = os.path.join(os.path.dirname(self.file_path), self.file_name)
 
-        for line in lines:
-            match = decision_table_pattern.search(line)
-            if match and generated_code_idx < len(generated_code):
-                # Determine the initial spacing of the decision table
-                initial_spacing = re.match(r"(\s*)", line).group(1)
-                # Add the generated code with matching spacing
-                generated_code_lines = generated_code[generated_code_idx].split('\n')
-                formatted_code = '\n'.join([initial_spacing + code_line if code_line.strip() else code_line for code_line in generated_code_lines])
-                new_lines.append(f"{formatted_code}\n")
-                generated_code_idx += 1
-            new_lines.append(line)
+    def insert(self, dt_position_to_code_map: dict):
+        for (line, column), code_snippet in dt_position_to_code_map.items():
+            # Adjust the line index (list is zero-based, file is one-based)
+            line_index = line - 1
 
-        with open(file_path, 'w') as file:
-            file.writelines(new_lines)
+            # Get the current line content
+            current_line = self.file_string[line_index]
 
-        logging.info(f"Code insertion complete for {file_path}")
+            # Insert the code_snippet at the specified column index
+            new_line = current_line[:column] + code_snippet + current_line[column:]
 
-# Example usage
-if __name__ == "__main__":
-    file_path = "path/to/your/file.py"
-    decision_tables = ["decision_table_1", "decision_table_2"]
-    generated_code = [
-        "def generated_function_1():\n    pass",
-        "def generated_function_2():\n    pass"
-    ]
+            # Replace the old line with the new line
+            self.file_string[line_index] = new_line
 
-    code_inserter = CodeInserter()
-    code_inserter.insert(file_path, decision_tables, generated_code)
+        # Save the modified content to self.new_file_path
+        with open(self.new_file_path, 'w') as file:
+            file.writelines(self.file_string)
