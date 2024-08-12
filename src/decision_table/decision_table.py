@@ -31,8 +31,9 @@ class DecisionTable:
     #1]
     #2[
     #2 PSEUDOCODIGO DE: __init__
-    def __init__(self, extracted_desion_table:str):
+    def __init__(self, extracted_desion_table:str, position:tuple):
     #2  Define o atributo extracted_decision_table e extrai o nome, conjuntos, condições e ações
+        self.set_end_position_of_decision_table_detected(position)
         self.set_extracted_decision_table(extracted_desion_table)
         self.set_name()
         self.set_sets()
@@ -53,6 +54,20 @@ class DecisionTable:
     def __str__(self) ->str:
     #2  Retorna uma string formatada com os atributos da tabela de decisão
         return f' [+] DecisionTable:\n     extracted_decision_table: {self.get_extracted_decision_table()}\n     name: {self.get_name()}\n     sets: {self.get_sets()}\n     conditions: {self.get_conditions()}\n     actions: {self.get_actions()}'
+    #2]
+
+    #1[
+    #1 ROTINA: set_end_position_of_decision_table_detected
+    #1 FINALIDADE: Definir o atributo end_position_of_decision_table.
+    #1 ENTRADAS: position (tuple)
+    #1 DEPENDENCIAS: N/A
+    #1 CHAMADO POR: __init__
+    #1 CHAMA: N/A
+    #1]
+    #2 PSEUDOCODIGO DE: set_extracted_decision_table
+    def set_end_position_of_decision_table_detected(self, position:tuple) ->None:
+        #2  Define o atributo end_position_of_decision_table
+        self.end_position_of_decision_table = position
     #2]
 
     #1[
