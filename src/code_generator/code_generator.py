@@ -23,7 +23,7 @@ class CodeGenerator():
     #1]
     #2[
     #2 PSEUDOCODIGO DE: __init__
-    def __init__(self, initial_spacing:str=' ', default_spacing:str='   '):
+    def __init__(self, initial_spacing:str='<INITIAL_SPACING>', default_spacing:str='<DEFAULT_SPACING>'):
     #2  Inicializa o dicionário de métodos de tradução
         self._decision_table_tradution_methods = {
             'switch_method' : self._switch_method,
@@ -151,7 +151,7 @@ class CodeGenerator():
     #2 PSEUDOCODIGO DE: _generate_initialization_code
     def _generate_initialization_code(self, td: DecisionTable) ->None:
     #2  Adiciona a definição da função de tabela de decisão ao código gerado
-        self.generated_code += f'{self.initial_spacing}def decision_table_{td.get_name()} ->None:\n'
+        self.generated_code += f'{self.initial_spacing}def decision_table_{td.get_name()}() ->None:\n'
     #2  Itera sobre as condições da tabela de decisão
         for index, condicao in enumerate(td.get_conditions()):
     #2      Adiciona a inicialização do auxiliar da condição ao código gerado
@@ -159,6 +159,9 @@ class CodeGenerator():
     #2  Adiciona a inicialização do número da regra ao código gerado
         self.generated_code += f'{self.initial_spacing+self.default_spacing}I   = 0 #Inicialização do número da regra\n'
     #2]
+
+    def _generate_invoke(self, td: DecisionTable) -> None:
+        self.generated_code += f'{self.initial_spacing}decision_table_{td.get_name()}()\n'
 
     #1[
     #1 ROTINA: _generate_if_or_elif_code
@@ -260,6 +263,7 @@ class CodeGenerator():
     #2  Gera o cálculo do ID da ação e o código de match
         self._generate_action_id_calculation_code(td)
         self._generate_match_code(td)
+        self._generate_invoke(td)
     #2]
 
     #1[
