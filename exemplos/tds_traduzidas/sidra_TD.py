@@ -782,22 +782,6 @@ class HandlerAnalysis:
             #TD        self.show_success_message()                      3   0   0   0                        
             #TD end table
 
-            if graph_option == "1":
-                self.set_choosed_options()
-                self.contribution_graph()
-            elif graph_option == "2":
-                self.set_choosed_options()
-                self.variation_graph() 
-            elif graph_option == "3":
-                self.show_available_options()
-            elif graph_option == "4":
-                self.show_visualization_core_exit_message()
-                break
-            else:
-                print(f' [-] Error: Unrecognized option "{graph_option}". Please enter a valid option (1, 2, 3, or 4).')
-        
- 
-
 def quit_program():
     print('> Exiting the program. Goodbye!')
     exit()
@@ -820,13 +804,13 @@ if __name__ == '__main__':
                        '  3 - Quit the program\n> '))
         #TD decision table td_main
         #TD sets
-        #          opcao_valida                     {1,2,3,12,13,123}
-        #          atualiza                         {1}
-        #          analisa                          {2}
-        #          sai                              {3}
-        #          atualiza_analisa                 {12}
-        #          atualiza_sai                     {13}
-        #          atualiza_analisa_sai             {123}
+        #TD        opcao_valida                     {1,2,3,12,13,123}
+        #TD        atualiza                         {1}
+        #TD        analisa                          {2}
+        #TD        sai                              {3}
+        #TD        atualiza_analisa                 {12}
+        #TD        atualiza_sai                     {13}
+        #TD        atualiza_analisa_sai             {123}
         #TD conditions
         #TD        option                           opcao_valida  opcao_valida opcao_valida opcao_valida        opcao_valida opcao_valida 
         #TD        option                           atualiza      analisa      sai          atualiza_analisa    atualiza_sai atualiza_analisa_sai
