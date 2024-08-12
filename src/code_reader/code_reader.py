@@ -52,36 +52,25 @@ class CodeReader:
             return content
 
     def _find_decision_tables(self) -> tuple:
-        """
-        Find and return decision tables along with their positions in the file.
-        Returns:
-            - list: Decision tables found
-            - list: Positions (line number and column) where each decision table starts
-        """
         decisions_table_found = []
         positions = []
         pattern = re.compile(r'(#TD decision table.*?#TD end table)', re.DOTALL)
 
         for match in pattern.finditer(self.get_code()):
-            pos = match.end()
-            line_number, column = self._get_line_col_from_pos(pos)
+            start = match.start()
+            end = match.end()
+            end_line, end_column = self._get_line_col_from_pos_end(end)
+            start_line, start_column = self._get_line_col_from_pos_start(start)
             decision_table = match.group(0)
             decisions_table_found.append(decision_table)
-            positions.append((line_number, column))
+            positions.append(((start_line, start_column), (end_line, end_column)))
 
         if not decisions_table_found:
             raise ValueError(f' [-] O arquivo não possui nenhuma tabela de decisão')
 
         return decisions_table_found, positions
 
-    def _get_line_col_from_pos(self, pos: int) -> tuple:
-        """
-        Get the line number and column number from a position in the code.
-        Args:
-            pos (int): Position in the code
-        Returns:
-            tuple: (line number, column number)
-        """
+    def _get_line_col_from_pos_end(self, pos: int) -> tuple:
         with open(self.get_path_code(), 'r') as file:
             content = file.read()
         
@@ -90,3 +79,14 @@ class CodeReader:
         column_number = len(lines[-1].replace('#TD end table','')) if lines else 0
 
         return line_number, column_number
+    
+    
+    def _get_line_col_from_pos_start(self, pos: int) -> tuple:
+        with open(self.get_path_code(), 'r') as file:
+            content = file.read()
+        
+        lines = content[:pos].splitlines()
+        line_number = len(lines)
+        column_number = len(lines[-1].replace('#TD decision table','')) if lines else 0
+
+        return line_number -1, column_number

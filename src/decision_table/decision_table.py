@@ -31,9 +31,9 @@ class DecisionTable:
     #1]
     #2[
     #2 PSEUDOCODIGO DE: __init__
-    def __init__(self, extracted_desion_table:str, position:tuple):
+    def __init__(self, extracted_desion_table:str, position:list):
     #2  Define o atributo extracted_decision_table e extrai o nome, conjuntos, condições e ações
-        self.set_end_position_of_decision_table_detected(position)
+        self.set_position_of_decision_table_detected(position)
         self.set_extracted_decision_table(extracted_desion_table)
         self.set_name()
         self.set_sets()
@@ -65,9 +65,9 @@ class DecisionTable:
     #1 CHAMA: N/A
     #1]
     #2 PSEUDOCODIGO DE: set_extracted_decision_table
-    def set_end_position_of_decision_table_detected(self, position:tuple) ->None:
+    def set_position_of_decision_table_detected(self, position:list) ->None:
         #2  Define o atributo end_position_of_decision_table
-        self.end_position_of_decision_table = position
+        self.position_of_decision_table = position
     #2]
 
     #1[
