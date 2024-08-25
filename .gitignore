@@ -6,3 +6,4 @@ __pycache__/
 
 sidra_notion_secrets.json
 *.png
+*.txt
