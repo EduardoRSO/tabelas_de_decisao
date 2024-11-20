@@ -15,10 +15,10 @@ import pdfkit
 from typing import List
 
 NV_1 = r'^ *#1.*'
-NV_2 = r'^ *#2.*'
+NV_2 = r'^ *#1.*|^ *#2.*'
 
 class Extractor:
-    EXCLUDED_PATHS = ['.git', '__pycache__', 'node_modules', '.DS_Store', 'Thumbs.db']
+    EXCLUDED_PATHS = ['.git', '__pycache__', 'node_modules', '.DS_Store', 'Thumbs.db', 'venv']
     EXCLUDED_SUFFIXES = ['.pdf', '__init__.py']
 
     #1[
