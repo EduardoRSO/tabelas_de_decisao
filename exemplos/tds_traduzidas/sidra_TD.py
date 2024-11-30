@@ -759,7 +759,7 @@ class HandlerAnalysis:
         self.set_analysis_df()
         
         while True:
-            graph_option = int(input('> Please choose a graph to plot:\n'
+            option = int(input('> Please choose a graph to plot:\n'
                                  '  1 - Contribution Graph (stacked bar graph by date)\n'
                                  '  2 - Variation Graph (line graph with bar graph behind)\n'
                                  '  3 - Show available options\n'
