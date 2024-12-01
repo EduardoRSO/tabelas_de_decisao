@@ -14,7 +14,7 @@ def atribui_3dias_de_folga():
 if __name__ == '__main__':
     hierarquia = input('').upper()
     setor = input('').upper()
-    meta_atingida = input('').upper()
+    meta_atingida = (input('').upper() == 'Y')
     #TD decision table td_estrutura_de_incentivos
     #TD sets
     #TD        hierarquia_gestor                     {"GESTOR"}
