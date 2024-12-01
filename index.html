@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabelas de Decisão em Python</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        p, li {
+            line-height: 1.6;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #2980b9;
+        }
+        table {
+            width: 80%;
+            margin: 0 auto; /* Centraliza horizontalmente */
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center; /* Centraliza o conteúdo da célula */
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .left-bold {
+            text-align: left;
+            font-weight: bold;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 14px;
+        }
+        .bibliography {
+            list-style-type: none;
+            padding: 0;
+        }
+        .bibliography li {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tabelas de Decisão em Python</h1>
+    <p class="highlight">Aluno: Eduardo Ribeiro Silva de Oliveira</p>
+    <p class="highlight">Orientador: Prof. Dr. Valdemar W. Setzer</p>
+
+    <h2>Proposta de Trabalho</h2>
+    <p>
+        Este trabalho de conclusão de curso propõe o desenvolviemento
+de um pré-processador para tabelas de decisão (TDs) em Python,
+em que a abordagem e método de tradução de TDs se baseia na
+dissertação de Satoshi Nagayama [Nagayama, 1990]. A dissertação
+apresenta diversos modelos de tradução de TDs, como o switch
+method, que foi utilizado no pré-processador deste trabalho.
+Além disso, ressalta-se a relevância da documentação, utilizando uma técnica
+de auto-documentação do Prof. Dr. Valdemar W. Setzer [Setzer, 1988].
+    </p>
+    <p>
+        Além disso, o trabalho ressalta a relevância da auto-documentação, utilizando a técnica proposta pelo Prof. Dr. Valdemar W. Setzer [1988]. Essa prática facilita a manutenção do código e promove a colaboração entre desenvolvedores.
+    </p>
+
+    <h2>Introdução</h2>
+    <p>
+        A programação, em sua essência, envolve a criação de algoritmos que fazem escolhas com base em condições lógicas. Tradicionalmente, essas escolhas lógicas são implementadas por meio de árvores de decisão com aninhamentos de `if...then...else`, que podem se tornar complexas e difíceis de manter. Nesse contexto, as TDs emergem como uma alternativa poderosa, oferecendo uma forma compacta, gráfica e organizada de especificar escolhas lógicas [\cite{setzer_comunicacao_pessoal}].
+    </p>
+
+    <h2>Exemplo de TD</h2>
+    <p>Abaixo está um exemplo de tabela de decisão:</p>
+    <table border="1" style="border-collapse: collapse;">
+        <thead>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="left-bold">Hierarquia</td>
+                <td>Gestor</td>
+                <td>Gestor</td>
+                <td>Gestor</td>
+                <td>Gestor</td>
+                <td>Analista</td>
+                <td>Analista</td>
+                <td>Analista</td>
+                <td>Analista</td>
+            </tr>
+            <tr>
+                <td class="left-bold">Setor</td>
+                <td>Comercial</td>
+                <td>Comercial</td>
+                <td>Administrativo</td>
+                <td>Administrativo</td>
+                <td>Comercial</td>
+                <td>Comercial</td>
+                <td>Administrativo</td>
+                <td>Administrativo</td>
+            </tr>
+            <tr>
+                <td class="left-bold">Metas atingidas</td>
+                <td>Y</td>
+                <td>N</td>
+                <td>Y</td>
+                <td>N</td>
+                <td>Y</td>
+                <td>N</td>
+                <td>Y</td>
+                <td>N</td>
+            </tr>
+            <tr>
+                <td class="left-bold">Inscrição em cursos de desenvolvimento</td>
+                <td>1</td>
+                <td>1</td>
+                <td>1</td>
+                <td>1</td>
+                <td>1</td>
+                <td>1</td>
+                <td>1</td>
+                <td>1</td>
+            </tr>
+            <tr>
+                <td class="left-bold">Bonificação de 5% do salário</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>2</td>
+                <td>2</td>
+                <td>-</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td class="left-bold">Bonificação de 10% do salário</td>
+                <td>2</td>
+                <td>2</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>2</td>
+                <td>2</td>
+            </tr>
+            <tr>
+                <td class="left-bold">Bonificação de 15% do salário</td>
+                <td>-</td>
+                <td>-</td>
+                <td>2</td>
+                <td>2</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td class="left-bold">3 dias de folga</td>
+                <td>3</td>
+                <td>-</td>
+                <td>3</td>
+                <td>-</td>
+                <td>3</td>
+                <td>-</td>
+                <td>3</td>
+                <td>-</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Exemplo de Código em Python</h2>
+    <pre>
+hierarquia = ''
+setor = ''
+meta_atingida = ''
+
+def inscreve_em_cursos():
+    print(f'Funcionário inscrito em cursos de desenvolvimento')
+
+def define_bonificacao(valor:int):
+    print(f'Funcionário recebe bonificacção de {valor}% do salário')
+
+def atribui_3dias_de_folga():
+    print(f'Funcionário recebe 3 dias de folga')
+
+if __name__ == '__main__':
+    hierarquia = input('').upper()
+    setor = input('').upper()
+    meta_atingida = (input('').upper() == 'Y')
+    #TD decision table td_estrutura_de_incentivos
+    #TD sets
+    #TD        hierarquia_gestor                     {"GESTOR"}
+    #TD        hierarquia_analista                   {"ANALISTA"}
+    #TD        setor_comercial                       {"COMERCIAL"}
+    #TD        setor_administrativo                  {"ADMINISTRATIVO"}
+    #TD conditions
+    #TD        hierarquia               hierarquia_gestor   hierarquia_gestor   hierarquia_gestor       hierarquia_gestor       hierarquia_analista     hierarquia_analista     hierarquia_analista     hierarquia_analista
+    #TD        setor                    setor_comercial     setor_comercial     setor_administrativo    setor_administrativo    setor_comercial         setor_comercial         setor_administrativo    setor_administrativo
+    #TD        meta_atingida            Y                   N                   Y                       N                       Y                       N                       Y                       N
+    #TD actions
+    #TD        inscreve_em_cursos()     1                   1                   1                       1                       1                       1                       1                       1                    
+    #TD        define_bonificacao(5)    0                   0                   0                       0                       2                       2                       0                       0      
+    #TD        define_bonificacao(10)   2                   2                   0                       0                       0                       0                       2                       2           
+    #TD        define_bonificacao(15)   0                   0                   2                       2                       0                       0                       0                       0
+    #TD        atribui_3dias_de_folga() 3                   0                   3                       0                       3                       0                       3                       0
+    #TD end table
+    </pre>
+
+    <h2>Código gerado pelo pré-processador</h2>
+<pre>
+    hierarquia = ''
+    setor = ''
+    meta_atingida = ''
+    
+    def inscreve_em_cursos():
+        print(f'Funcionário inscrito em cursos de desenvolvimento')
+    
+    def define_bonificacao(valor:int):
+        print(f'Funcionário recebe bonificacção de {valor}% do salário')
+    
+    def atribui_3dias_de_folga():
+        print(f'Funcionário recebe 3 dias de folga')
+    
+    if __name__ == '__main__':
+        hierarquia = input('').upper()
+        setor = input('').upper()
+        meta_atingida = (input('').upper() == 'Y')
+        #2[
+        #2 #TD decision table td_estrutura_de_incentivos
+        #2 #TD sets
+        #2 #TD        hierarquia_gestor                     {"GESTOR"}
+        #2 #TD        hierarquia_analista                   {"ANALISTA"}
+        #2 #TD        setor_comercial                       {"COMERCIAL"}
+        #2 #TD        setor_administrativo                  {"ADMINISTRATIVO"}
+        #2 #TD conditions
+        #2 #TD        hierarquia               hierarquia_gestor   hierarquia_gestor   hierarquia_gestor       hierarquia_gestor       hierarquia_analista     hierarquia_analista     hierarquia_analista     hierarquia_analista
+        #2 #TD        setor                    setor_comercial     setor_comercial     setor_administrativo    setor_administrativo    setor_comercial         setor_comercial         setor_administrativo    setor_administrativo
+        #2 #TD        meta_atingida            Y                   N                   Y                       N                       Y                       N                       Y                       N
+        #2 #TD actions
+        #2 #TD        inscreve_em_cursos()     1                   1                   1                       1                       1                       1                       1                       1                    
+        #2 #TD        define_bonificacao(5)    0                   0                   0                       0                       2                       2                       0                       0      
+        #2 #TD        define_bonificacao(10)   2                   2                   0                       0                       0                       0                       2                       2           
+        #2 #TD        define_bonificacao(15)   0                   0                   2                       2                       0                       0                       0                       0
+        #2 #TD        atribui_3dias_de_folga() 3                   0                   3                       0                       3                       0                       3                       0
+        #2 #TD end table
+        #2]
+        def decision_table_td_estrutura_de_incentivos() ->None:
+            I_0 = 0 #Inicialização do auxiliar da condição hierarquia
+            I_1 = 0 #Inicialização do auxiliar da condição setor
+            I_2 = 0 #Inicialização do auxiliar da condição meta_atingida
+            I   = 0 #Inicialização do número da regra
+            if hierarquia in set(["GESTOR"]):
+                I_0 = 0
+            elif hierarquia in set(["ANALISTA"]):
+                I_0 = 1
+            if setor in set(["COMERCIAL"]):
+                I_1 = 0
+            elif setor in set(["ADMINISTRATIVO"]):
+                I_1 = 1
+            if meta_atingida == True:
+                I_2 = 0
+            elif meta_atingida == False:
+                I_2 = 1
+            I = (2*2*1)*I_0 + (2*1)*I_1 + (1)*I_2
+            match I:
+                case 0:
+                    inscreve_em_cursos()
+                    define_bonificacao(10)
+                    atribui_3dias_de_folga()
+                case 1:
+                    inscreve_em_cursos()
+                    define_bonificacao(10)
+                case 2:
+                    inscreve_em_cursos()
+                    define_bonificacao(15)
+                    atribui_3dias_de_folga()
+                case 3:
+                    inscreve_em_cursos()
+                    define_bonificacao(15)
+                case 4:
+                    inscreve_em_cursos()
+                    define_bonificacao(5)
+                    atribui_3dias_de_folga()
+                case 5:
+                    inscreve_em_cursos()
+                    define_bonificacao(5)
+                case 6:
+                    inscreve_em_cursos()
+                    define_bonificacao(10)
+                    atribui_3dias_de_folga()
+                case 7:
+                    inscreve_em_cursos()
+                    define_bonificacao(10)
+                case _:
+                    exit()
+        decision_table_td_estrutura_de_incentivos()    
+</pre>
+    <h2>Resultados</h2>
+    <p>
+        O pré-processador desenvolvido foi capaz de traduzir TDs em código Python executável, utilizando o método de tradução switch method, foi projetado usando o Strategy
+        Pattern[Freeman et al., 2004], possibilitando a fácil extensão de novos métodos de tradução; A modularidade do sistema permitiu uma fácil manutenção e evolução do
+        projeto; E a integração de práticas de auto-documentação foi outro marco importante do trabalho por acarretar em uma documentação clara, atualizada e concisa.    
+    </p>
+
+    <h2>Bibliografia</h2>
+    <ul class="bibliography">
+        <li>
+            <strong>Freeman, Eric et al.</strong> (Nov. 2004). <em>Head First Design Patterns: A Brain-Friendly Guide</em>. Sebastopol, CA, USA: O’Reilly Media.
+        </li>
+        <li>
+            <strong>Nagayama, Satoshi</strong> (1990). “Implementação de Gerador I-M-E com Tabelas de Decisão”. PhD thesis. São Carlos, SP, Brasil: Instituto de Ciências Matemáticas e de Computação, USP.
+        </li>
+        <li>
+            <strong>Setzer, Valdemar W.</strong> (setembro 1988). <em>Um Sistema Simples para Documentação Semi-Automática de Programas</em>. Tech. rep. RT-MAC-8808. Relatório Técnico. São Carlos, SP, Brasil: Instituto de Matemática e Computação, Universidade de São Paulo (USP).
+        </li>
+        <li>
+            <strong>Setzer, Valdemar W.</strong> (2024). <em>Comunicação pessoal</em>. Orientador do Trabalho de Conclusão de Curso.
+        </li>
+    </ul>
+    <h2>Links relevantes</h2>
+    <p><a href="https://github.com/EduardoRSO/tabelas_de_decisao" target="_blank">github</a></p>
+    <p><a href="https://github.com/EduardoRSO/tabelas_de_decisao/blob/main/tese.pdf" target="_blank">monografia</a></p>
+    <p><a href="https://github.com/EduardoRSO/tabelas_de_decisao/blob/main/poster.pdf" target="_blank">poster</a></p>
+</body>
+</html>
