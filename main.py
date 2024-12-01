@@ -25,6 +25,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# elaborar alguns exemplos que usem outras representações na sintaxe de TD --> talvez no proprio sidra eu consiga resolver isso.
-# reescrever o extrator de auto-documentação e a fazer com que ele funcione em um esquema de diretórios
