@@ -1,4 +1,3 @@
-```markdown
 # Projeto de Extração e Processamento de TDs
 
 Este repositório contém um sistema para extração e processamento de Documentação Técnica (TDs) em arquivos Python. Ele inclui um extrator de documentação e um pré-processador de TDs, além de exemplos e documentação relacionada.
@@ -7,7 +6,6 @@ Este repositório contém um sistema para extração e processamento de Document
 
 A estrutura de diretórios do projeto está organizada da seguinte forma:
 
-```
 /
 ├── docs/                       # Arquivos .pdf usados na monografia
 ├── exemplos/                   # Exemplos de documentação gerada pelo extrator
@@ -22,7 +20,6 @@ A estrutura de diretórios do projeto está organizada da seguinte forma:
 ├── tese.pdf                     # Tese relacionada ao projeto
 ├── poster.pdf                   # Poster de apresentação do projeto
 ├── index.html                   # Página do site na rede Linux do IME
-```
 
 ## Como Usar
 
