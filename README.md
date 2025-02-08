@@ -1,7 +1,3 @@
-# Projeto de Extração e Processamento de TDs
-
-Este repositório contém um sistema para extração e processamento de Documentação Técnica (TDs) em arquivos Python. Ele inclui um extrator de documentação e um pré-processador de TDs, além de exemplos e documentação relacionada.
-
 ## Estrutura do Repositório
 
 A estrutura de diretórios do projeto está organizada da seguinte forma:
