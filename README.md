@@ -27,12 +27,12 @@ A estrutura de diretórios do projeto está organizada da seguinte forma:
 
 1. **Executar o extrator de documentação:**
    ```sh
-   python extrator_de_documentacao.py input_extrator_de_documentacao
+   python extrator_de_documentacao.py < input_extrator_de_documentacao
    ```
 
 2. **Executar o pré-processador de TDs:**
    ```sh
-   python main.py input_preprocessador
+   python main.py < input_preprocessador
    ```
 
 ## Contato
