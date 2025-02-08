@@ -11,7 +11,7 @@
 
 from .set import SetParser
 from .condition import ConditionParser
-from .action import ActionParser
+from .action import ActionParser #USO DE PATH RELATIVO
 
 class DecisionTable:
 
@@ -40,9 +40,9 @@ class DecisionTable:
     #1]
     #2[
     #2 PSEUDOCODIGO DE: __init__
-    def __init__(self, extracted_desion_table: str, position: list):
+    def __init__(self, extracted_desion_table: str, position: list): #AS POSIÇÕES INDICAM A LINHA DE INICIO
     #2  DEFINE A POSICAO DETECTADA DA TABELA DE DECISAO
-        self.set_position_of_decision_table_detected(position)
+        self.set_position_of_decision_table_detected(position) 
     #2  DEFINE O ATRIBUTO EXTRACTED_DECISION_TABLE
         self.set_extracted_decision_table(extracted_desion_table)
     #2  DEFINE O NOME DA TABELA DE DECISAO
